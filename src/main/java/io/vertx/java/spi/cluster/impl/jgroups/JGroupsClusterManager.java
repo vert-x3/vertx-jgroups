@@ -43,6 +43,7 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
 
   private static final Logger LOG = LoggerFactory.getLogger(JGroupsClusterManager.class);
 
+  public static final String JGROUPS_CONFIG_FILE = "vertx.jgroups.filename";
   public static final String CLUSTER_NAME = "JGROUPS_CLUSTER";
 
   private VertxSPI vertx;
@@ -61,7 +62,7 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
   private final String jgroupsConfigurationFile;
 
   public JGroupsClusterManager() {
-    this("default-jgroups.xml");
+    this(System.getProperty(JGROUPS_CONFIG_FILE, "default-jgroups.xml"));
   }
 
   public JGroupsClusterManager(String jgroupsConfigurationFile) {
