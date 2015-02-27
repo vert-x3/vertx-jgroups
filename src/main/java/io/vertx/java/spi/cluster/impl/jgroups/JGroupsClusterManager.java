@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2011-2013 The original author or authors
  * ------------------------------------------------------
@@ -62,7 +61,7 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
   private final String jgroupsConfigurationFile;
 
   public JGroupsClusterManager() {
-    this("jgroups-udp.xml");
+    this("default-jgroups.xml");
   }
 
   public JGroupsClusterManager(String jgroupsConfigurationFile) {
