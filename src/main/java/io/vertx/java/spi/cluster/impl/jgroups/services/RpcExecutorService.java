@@ -27,10 +27,6 @@ import java.util.function.Supplier;
 
 public interface RpcExecutorService {
 
-  <T> T remoteExecute(MethodCall action);
-
-  <T> T remoteExecute(MethodCall action, long timeout);
-
   <T> void remoteExecute(MethodCall action, Handler<AsyncResult<T>> handler);
 
   <T> void remoteExecute(MethodCall action, long timeout, Handler<AsyncResult<T>> handler);

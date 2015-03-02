@@ -51,16 +51,6 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
   }
 
   @Override
-  public <T> T remoteExecute(MethodCall action) {
-    return this.execute(action, 0);
-  }
-
-  @Override
-  public <T> T remoteExecute(MethodCall action, long timeout) {
-    return this.execute(action, timeout);
-  }
-
-  @Override
   public <T> void remoteExecute(MethodCall action, Handler<AsyncResult<T>> handler) {
     this.<T>remoteExecute(action, 0, handler);
   }
