@@ -16,20 +16,22 @@
 
 package io.vertx.java.spi.cluster.impl.jgroups.domain;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.impl.LoggerFactory;
-import io.vertx.core.spi.cluster.VertxSPI;
 import io.vertx.java.spi.cluster.impl.jgroups.services.RpcExecutorService;
 import io.vertx.java.spi.cluster.impl.jgroups.services.RpcServerObjDelegate;
+import io.vertx.java.spi.cluster.impl.jgroups.support.LambdaLogger;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-public class SyncMapWrapper<K, V> implements Map<K, V> {
+public class SyncMapWrapper<K, V> implements Map<K, V>, LambdaLogger {
 
-  private final static Logger log = LoggerFactory.getLogger(SyncMapWrapper.class);
+  private final static Logger LOG = LoggerFactory.getLogger(SyncMapWrapper.class);
 
   private final String name;
   private final Map<K, V> map;
@@ -68,22 +70,56 @@ public class SyncMapWrapper<K, V> implements Map<K, V> {
 
   @Override
   public V put(K key, V value) {
-    return executorService.remoteExecute(RpcServerObjDelegate.CALL_MAP_PUT.method(name, key, value));
+    executorService.remoteExecute(RpcServerObjDelegate.CALL_MAP_PUT.method(name, key, value), new Handler<AsyncResult<V>>() {
+      @Override
+      public void handle(AsyncResult<V> result) {
+        if (result.failed()) {
+          logInfo(()-> String.format("Remote PUT on Map [%s] failed for key [%s]", name, key));
+        }
+      }
+    });
+
+    return map.put(key, value);
   }
 
   @Override
   public V remove(Object key) {
-    return executorService.remoteExecute(RpcServerObjDelegate.CALL_MAP_REMOVE.method(name, key));
+    executorService.remoteExecute(RpcServerObjDelegate.CALL_MAP_REMOVE.method(name, key), new Handler<AsyncResult<V>>() {
+      @Override
+      public void handle(AsyncResult<V> result) {
+        if (result.failed()) {
+          logInfo(()-> String.format("Remote REMOVE on Map [%s] failed for key [%s]", name, key));
+        }
+      }
+    });
+
+    return map.remove(key);
   }
 
   @Override
-  public void putAll(Map<? extends K, ? extends V> m) {
-    executorService.remoteExecute(RpcServerObjDelegate.CALL_MAP_PUTALL.method(name, m));
+  public void putAll(Map<? extends K, ? extends V> data) {
+    executorService.remoteExecute(RpcServerObjDelegate.CALL_MAP_PUTALL.method(name, data), new Handler<AsyncResult<Void>>() {
+      @Override
+      public void handle(AsyncResult<Void> result) {
+        if (result.failed()) {
+          logInfo(()-> String.format("Remote PUTALL on Map [%s] failed", name));
+        }
+      }
+    });
+    map.putAll(data);
   }
 
   @Override
   public void clear() {
-    executorService.remoteExecute(RpcServerObjDelegate.CALL_MAP_CLEAR.method(name));
+    executorService.remoteExecute(RpcServerObjDelegate.CALL_MAP_CLEAR.method(name), new Handler<AsyncResult<Void>>() {
+      @Override
+      public void handle(AsyncResult<Void> result) {
+        if (result.failed()) {
+          logInfo(()-> String.format("Remote CLEAR on Map [%s] failed", name));
+        }
+      }
+    });
+    map.clear();
   }
 
   @Override
@@ -99,5 +135,10 @@ public class SyncMapWrapper<K, V> implements Map<K, V> {
   @Override
   public Set<Entry<K, V>> entrySet() {
     return Collections.unmodifiableSet(map.entrySet());
+  }
+
+  @Override
+  public Logger log() {
+    return LOG;
   }
 }
