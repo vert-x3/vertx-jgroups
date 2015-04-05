@@ -16,19 +16,17 @@
 
 package io.vertx.java.spi.cluster.impl.jgroups.listeners;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.impl.LoggerFactory;
-import io.vertx.core.spi.cluster.Action;
 import io.vertx.core.spi.cluster.NodeListener;
-import io.vertx.core.spi.cluster.VertxSPI;
 import io.vertx.java.spi.cluster.impl.jgroups.support.LambdaLogger;
 import org.jgroups.*;
 
-import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -36,13 +34,14 @@ import java.util.stream.Collectors;
 public class TopologyListener extends ReceiverAdapter implements LambdaLogger {
 
   private final static Logger LOG = LoggerFactory.getLogger(TopologyListener.class);
-  private final VertxSPI vertx;
+  private final Vertx vertx;
+  private Address address;
 
   private ViewId viewId;
-  private List<Address> members = Collections.emptyList();
+  private List<String> members = Collections.emptyList();
   private Optional<NodeListener> nodeListener = Optional.empty();
 
-  public TopologyListener(VertxSPI vertx) {
+  public TopologyListener(Vertx vertx) {
     this.vertx = vertx;
   }
 
@@ -53,6 +52,8 @@ public class TopologyListener extends ReceiverAdapter implements LambdaLogger {
 
   @Override
   public void viewAccepted(View view) {
+    logDebug(() -> String.format("Called View accepted [%s]", view));
+
     if (view.getViewId() == null) {
       logTrace(() -> String.format("Called View accepted [%s] with ViewId null.", view));
       return;
@@ -63,51 +64,50 @@ public class TopologyListener extends ReceiverAdapter implements LambdaLogger {
       return;
     }
 
-    logTrace(() -> String.format("Called View accepted [%s]", view));
-    List<Address> oldMembers = members;
-    members = view.getMembers();
+    List oldMembers = members;
+    members = view.getMembers().stream()
+        .map(Address::toString)
+        .collect(Collectors.toList());
     viewId = view.getViewId().copy();
+    nodeListener.ifPresent(listener -> notifyNodeListener(listener, members, oldMembers));
+  }
 
-    nodeListener.ifPresent((listener) -> vertx.executeBlocking(() -> {
-      List<Address> newMembers = members;
+  private void notifyNodeListener(NodeListener listener, List<String> newMembers, List<String> oldMembers) {
+    if (newMembers == null) {
+      return;
+    }
 
-      Predicate<Address> oldMemberNodeHasLeft = (member) -> !newMembers.contains(member);
-      Predicate<Address> newMemberNodeJoin = (member) -> !oldMembers.contains(member);
-      Consumer<Address> nodeJoin = (member) -> {
-        logInfo(() -> String.format("Notify node [%s] has joined the cluster", member));
-        listener.nodeAdded(member.toString());
-      };
-      Consumer<Address> nodeLeft = (member) -> {
-        logInfo(() -> String.format("Notify node [%s] has left the cluster", member));
-        listener.nodeLeft(member.toString());
-      };
-
+    vertx.<Void>executeBlocking((event) -> {
       newMembers.stream()
-          .filter(newMemberNodeJoin)
-          .forEach(nodeJoin);
-      oldMembers.stream()
-          .filter(oldMemberNodeHasLeft)
-          .forEach(nodeLeft);
+          .filter(((Predicate<String>) oldMembers::contains).negate())
+          .peek((member) -> logDebug(() -> String.format("Notify node [%s] that node [%s] has joined the cluster", address, member)))
+          .forEach(listener::nodeAdded);
 
-      return null;
-    }, (r) -> Function.identity()));
+      oldMembers.stream()
+          .filter(((Predicate<String>) newMembers::contains).negate())
+          .peek((member) -> logDebug(() -> String.format("Notify node [%s] that node [%s] has left the cluster", address, member)))
+          .forEach(listener::nodeLeft);
+
+      event.complete();
+    }, (v) -> Function.identity());
   }
 
   public void setNodeListener(NodeListener nodeListener) {
-    logTrace(() -> String.format("Set topology listener [%s]", nodeListener));
+    logDebug(() -> String.format("Set topology listener [%s]", nodeListener));
     this.nodeListener = Optional.of(nodeListener);
   }
 
   public List<String> getNodes() {
-    logTrace(() -> String.format("Get Nodes from topology [%s]", members));
-    return members
-        .stream()
-        .map(Address::toString)
-        .collect(Collectors.toList());
+    logDebug(() -> String.format("Get Nodes from topology [%s]", members));
+    return Collections.unmodifiableList(members);
   }
 
   @Override
   public Logger log() {
     return LOG;
+  }
+
+  public void setAddress(Address address) {
+    this.address = address;
   }
 }

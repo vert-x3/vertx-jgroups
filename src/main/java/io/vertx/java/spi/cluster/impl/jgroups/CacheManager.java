@@ -17,14 +17,13 @@
 package io.vertx.java.spi.cluster.impl.jgroups;
 
 import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.VertxException;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.impl.LoggerFactory;
 import io.vertx.core.shareddata.AsyncMap;
 import io.vertx.core.spi.cluster.AsyncMultiMap;
-import io.vertx.core.spi.cluster.VertxSPI;
 import io.vertx.java.spi.cluster.impl.jgroups.domain.MultiMapImpl;
 import io.vertx.java.spi.cluster.impl.jgroups.domain.SyncMapWrapper;
 import io.vertx.java.spi.cluster.impl.jgroups.domain.async.AsyncMapWrapper;
@@ -35,8 +34,10 @@ import org.jgroups.JChannel;
 import org.jgroups.ReceiverAdapter;
 import org.jgroups.blocks.RpcDispatcher;
 
-import java.io.*;
-import java.util.HashMap;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -44,8 +45,8 @@ public class CacheManager extends ReceiverAdapter implements LambdaLogger {
 
   private static final Logger LOG = LoggerFactory.getLogger(CacheManager.class);
 
-  private final VertxSPI vertx;
-  private final JChannel channel;
+  private final Vertx vertx;
+  private JChannel channel;
   private final RpcDispatcher dispatcher;
 
   private final Map<String, Map> maps = new ConcurrentHashMap<>();
@@ -55,7 +56,7 @@ public class CacheManager extends ReceiverAdapter implements LambdaLogger {
   private final RpcMultiMapService multiMapService;
   private final RpcMapService mapService;
 
-  public CacheManager(VertxSPI vertx, JChannel channel) {
+  public CacheManager(Vertx vertx, JChannel channel) {
     this.vertx = vertx;
     this.channel = channel;
 
@@ -71,34 +72,31 @@ public class CacheManager extends ReceiverAdapter implements LambdaLogger {
   }
 
   public <K, V> void createAsyncMultiMap(String name, Handler<AsyncResult<AsyncMultiMap<K, V>>> handler) {
-    logTrace(() -> String.format("method createAsyncMultiMap address[%s] name[%s]", channel.getAddressAsString(), name));
-    executorService.remoteExecute(RpcServerObjDelegate.CALL_MULTIMAP_CREATE.method(name),
-        (result) -> {
-          logDebug(() -> String.format("method created AsyncMultiMap address[%s] name[%s]", channel.getAddressAsString(), name));
-          if (result.succeeded()) {
-            AsyncMultiMapWrapper<K, V> wrapper = new AsyncMultiMapWrapper<K, V>(name, multiMaps.<String, MultiMapImpl<K, V>>get(name), executorService);
-            handler.handle(Future.succeededFuture(wrapper));
-          } else {
-            handler.handle(Future.failedFuture(result.cause()));
-          }
-        });
+    logDebug(() -> String.format("method createAsyncMultiMap address[%s] name[%s]", channel.getAddressAsString(), name));
+    vertx.executeBlocking(
+        future -> {
+          multiMapService.multiMapCreate(name);
+          future.complete(new AsyncMultiMapWrapper<K, V>(name, multiMaps.get(name), executorService));
+        },
+        handler
+    );
   }
 
   public <K, V> void createAsyncMap(String name, Handler<AsyncResult<AsyncMap<K, V>>> handler) {
-    logTrace(() -> String.format("method createAsyncMap address[%s] name[%s]", channel.getAddressAsString(), name));
-    executorService.remoteExecute(RpcServerObjDelegate.CALL_MAP_CREATE.method(name),
-        (result) -> {
-          if (result.succeeded()) {
-            AsyncMapWrapper<K, V> wrapper = new AsyncMapWrapper<K, V>(name, maps.<String, Map<K, V>>get(name), executorService);
-            handler.handle(Future.succeededFuture(wrapper));
-          } else {
-            handler.handle(Future.failedFuture(result.cause()));
-          }
-        });
+    logDebug(() -> String.format("method createAsyncMap address[%s] name[%s]", channel.getAddressAsString(), name));
+    vertx.executeBlocking(
+        future -> {
+          mapService.mapCreate(name);
+          future.complete(new AsyncMapWrapper<K, V>(name, maps.get(name), executorService));
+        },
+        handler
+    );
   }
 
   public <K, V> Map<K, V> createSyncMap(String name) {
-    return new SyncMapWrapper<>(name, (Map<K, V>) maps.computeIfAbsent(name, (key) -> new HashMap()), executorService);
+    logDebug(() -> String.format("method createSyncMap address[%s] name[%s]", channel.getAddressAsString(), name));
+    mapService.mapCreate(name);
+    return new SyncMapWrapper<>(name, maps.get(name), executorService);
   }
 
   @Override
@@ -109,10 +107,15 @@ public class CacheManager extends ReceiverAdapter implements LambdaLogger {
   @Override
   public void getState(OutputStream output) throws Exception {
     logTrace(() -> "CacheManager get state");
-    try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(output, 1024);
-         ObjectOutputStream oos = new ObjectOutputStream(bufferedOutputStream)) {
-      oos.writeObject(multiMaps);
-      oos.writeObject(maps);
+    try (ObjectOutputStream oos = new ObjectOutputStream(output)) {
+      oos.writeInt(multiMaps.size());
+      if (multiMaps.size() > 0) {
+        oos.writeObject(multiMaps);
+      }
+      oos.writeInt(maps.size());
+      if (maps.size() > 0) {
+        oos.writeObject(maps);
+      }
       oos.flush();
     }
   }
@@ -121,8 +124,14 @@ public class CacheManager extends ReceiverAdapter implements LambdaLogger {
   public void setState(InputStream input) throws Exception {
     logTrace(() -> "CacheManager set state");
     try (ObjectInputStream oos = new ObjectInputStream(input)) {
-      multiMaps.putAll((Map<String, MultiMapImpl>) oos.readObject());
-      maps.putAll((Map<String, Map>) oos.readObject());
+      if (oos.readInt() > 0) {
+        Map<String, MultiMapImpl> m = (Map<String, MultiMapImpl>) oos.readObject();
+        multiMaps.putAll(m);
+      }
+      if (oos.readInt() > 0) {
+        Map<String, Map> m = (Map<String, Map>) oos.readObject();
+        maps.putAll(m);
+      }
     }
   }
 
@@ -132,5 +141,10 @@ public class CacheManager extends ReceiverAdapter implements LambdaLogger {
     } catch (Exception e) {
       throw new VertxException(e);
     }
+  }
+
+  public void stop() {
+    dispatcher.stop();
+    executorService.stop();
   }
 }

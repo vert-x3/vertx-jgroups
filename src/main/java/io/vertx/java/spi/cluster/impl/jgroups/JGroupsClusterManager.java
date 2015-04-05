@@ -18,6 +18,7 @@ package io.vertx.java.spi.cluster.impl.jgroups;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.VertxException;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.impl.LoggerFactory;
@@ -27,17 +28,20 @@ import io.vertx.core.shareddata.Lock;
 import io.vertx.core.spi.cluster.AsyncMultiMap;
 import io.vertx.core.spi.cluster.ClusterManager;
 import io.vertx.core.spi.cluster.NodeListener;
-import io.vertx.core.spi.cluster.VertxSPI;
 import io.vertx.java.spi.cluster.impl.jgroups.domain.ClusteredCounterImpl;
 import io.vertx.java.spi.cluster.impl.jgroups.domain.ClusteredLockImpl;
 import io.vertx.java.spi.cluster.impl.jgroups.listeners.TopologyListener;
 import io.vertx.java.spi.cluster.impl.jgroups.support.LambdaLogger;
+import org.jgroups.Channel;
 import org.jgroups.JChannel;
 import org.jgroups.blocks.atomic.CounterService;
 import org.jgroups.blocks.locking.LockService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
 
@@ -46,7 +50,7 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
   public static final String JGROUPS_CONFIG_FILE = "vertx.jgroups.filename";
   public static final String CLUSTER_NAME = "JGROUPS_CLUSTER";
 
-  private VertxSPI vertx;
+  private Vertx vertx;
 
   private CacheManager cacheManager;
 
@@ -55,7 +59,9 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
   private CounterService counterService;
   private LockService lockService;
 
-  private volatile boolean active;
+  private String lock = "Lock";
+
+  private volatile boolean active = false;
   private String address;
   private TopologyListener topologyListener;
 
@@ -70,54 +76,53 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
   }
 
   @Override
-  public void setVertx(VertxSPI vertx) {
+  public void setVertx(Vertx vertx) {
     this.vertx = vertx;
   }
 
   @Override
   public <K, V> void getAsyncMultiMap(String name, Handler<AsyncResult<AsyncMultiMap<K, V>>> handler) {
     logTrace(() -> String.format("Create new AsyncMultiMap [%s] on address [%s]", name, address));
-    checkCluster(handler);
+    checkCluster();
     cacheManager.createAsyncMultiMap(name, handler);
   }
 
   @Override
   public <K, V> void getAsyncMap(String name, Handler<AsyncResult<AsyncMap<K, V>>> handler) {
     logTrace(() -> String.format("Create new AsyncMap [%s] on address [%s]", name, address));
-    checkCluster(handler);
+    checkCluster();
     cacheManager.createAsyncMap(name, handler);
   }
 
   @Override
   public <K, V> Map<K, V> getSyncMap(String name) {
+    logTrace(() -> String.format("Create new SyncMap [%s] on address [%s]", name, address));
+    checkCluster();
     return cacheManager.createSyncMap(name);
   }
 
   @Override
   public void getLockWithTimeout(String name, long timeout, Handler<AsyncResult<Lock>> handler) {
     logTrace(() -> String.format("Create new Lock [%s] on address [%s]", name, address));
-    checkCluster(handler);
+    checkCluster();
     vertx.executeBlocking(
-        () -> {
+        future -> {
           ClusteredLockImpl lock = new ClusteredLockImpl(lockService, name);
           if (lock.acquire(timeout)) {
             logDebug(() -> String.format("Lock acquired on [%s]", name));
-            return lock;
+            future.complete(lock);
           } else {
-            logError(() -> String.format("Timed out waiting to get lock [%s]", name));
-            throw new VertxException(String.format("Timed out waiting to get lock [%s]", name));
+            future.fail(String.format("Timed out waiting to get lock [%s]", name));
           }
-        },
-        handler
-    );
+        }, handler);
   }
 
   @Override
   public void getCounter(String name, Handler<AsyncResult<Counter>> handler) {
     logTrace(() -> String.format("Create new counter [%s] on address [%s]", name, address));
-    checkCluster(handler);
+    checkCluster();
     vertx.executeBlocking(
-        () -> new ClusteredCounterImpl(vertx, counterService.getOrCreateCounter(name, 0L)),
+        future -> future.complete(new ClusteredCounterImpl(vertx, counterService.getOrCreateCounter(name, 0L))),
         handler
     );
   }
@@ -141,52 +146,51 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
 
   @Override
   public void join(Handler<AsyncResult<Void>> handler) {
-    vertx.executeBlocking(() -> {
-      if (active) {
-        return null;
-      }
-      active = true;
+    vertx.executeBlocking((future) -> {
+      synchronized (lock) {
+        if(!active) {
+          try {
+            channel = new JChannel(jgroupsConfigurationFile);
+            topologyListener = new TopologyListener(vertx);
+            channel.setReceiver(topologyListener);
+            channel.connect(CLUSTER_NAME);
 
-      try {
-        channel = new JChannel(jgroupsConfigurationFile);
-        topologyListener = new TopologyListener(vertx);
-        channel.setReceiver(topologyListener);
-        channel.connect(CLUSTER_NAME);
+            address = channel.getAddressAsString();
+            topologyListener.setAddress(channel.getAddress());
 
-        address = channel.getAddressAsString();
+            logInfo(() -> String.format("Node id [%s] join the cluster", this.getNodeID()));
 
-        logInfo(() -> String.format("Node id [%s] join the cluster", this.getNodeID()));
+            counterService = new CounterService(channel);
+            lockService = new LockService(channel);
 
-        counterService = new CounterService(channel);
-        lockService = new LockService(channel);
+            cacheManager = new CacheManager(vertx, channel);
+            cacheManager.start();
 
-        cacheManager = new CacheManager(vertx, channel);
-        cacheManager.start();
-
-        return null;
-      } catch (Exception e) {
-        active = false;
-        throw new RuntimeException(e);
+            active = true;
+          } catch (Exception e) {
+            throw new VertxException(e);
+          }
+        }
+        future.complete();
       }
     }, handler);
   }
 
   @Override
-  public void leave(Handler<AsyncResult<Void>> handler) {
-    vertx.executeBlocking(() -> {
-      if (!active) {
-        return null;
+  public  void leave(Handler<AsyncResult<Void>> handler) {
+    vertx.executeBlocking((future) -> {
+      synchronized (lock) {
+        if (active) {
+          active = false;
+          logInfo(() -> String.format("Node id [%s] leave the cluster", this.getNodeID()));
+          cacheManager.stop();
+          channel.close();
+          cacheManager = null;
+          topologyListener = null;
+          channel = null;
+        }
+        future.complete();
       }
-      active = false;
-
-      logInfo(() -> String.format("Node id [%s] leave the cluster", this.getNodeID()));
-
-      channel.close();
-
-      channel = null;
-      address = null;
-
-      return null;
     }, handler);
   }
 
@@ -195,7 +199,7 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
     return active;
   }
 
-  private <R> void checkCluster(Handler<AsyncResult<R>> handler) {
+  private <R> void checkCluster() {
     if (!active) {
       throw new VertxException("Cluster is not active!");
     }

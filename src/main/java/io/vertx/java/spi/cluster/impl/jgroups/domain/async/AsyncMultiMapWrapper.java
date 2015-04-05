@@ -29,6 +29,10 @@ import io.vertx.java.spi.cluster.impl.jgroups.support.LambdaLogger;
 import io.vertx.java.spi.cluster.impl.jgroups.services.RpcExecutorService;
 import io.vertx.java.spi.cluster.impl.jgroups.services.RpcServerObjDelegate;
 
+import static io.vertx.java.spi.cluster.impl.jgroups.services.RpcServerObjDelegate.CALL_MULTIMAP_ADD;
+import static io.vertx.java.spi.cluster.impl.jgroups.services.RpcServerObjDelegate.CALL_MULTIMAP_REMOVE;
+import static io.vertx.java.spi.cluster.impl.jgroups.services.RpcServerObjDelegate.CALL_MULTIMAP_REMOVE_ALL;
+
 public class AsyncMultiMapWrapper<K, V> implements AsyncMultiMap<K, V>, LambdaLogger {
 
   private final static Logger LOG = LoggerFactory.getLogger(AsyncMultiMapWrapper.class);
@@ -46,7 +50,7 @@ public class AsyncMultiMapWrapper<K, V> implements AsyncMultiMap<K, V>, LambdaLo
   @Override
   public void add(K k, V v, Handler<AsyncResult<Void>> handler) {
     logTrace(() -> "add k = [" + k + "], v = [" + v + "], handler = [" + handler + "]");
-    executorService.<Void>remoteExecute(RpcServerObjDelegate.CALL_MULTIMAP_ADD.method(name, k, v), handler);
+    executorService.<Void>remoteExecute(CALL_MULTIMAP_ADD.method(name, k, v), handler);
   }
 
   @Override
@@ -62,12 +66,12 @@ public class AsyncMultiMapWrapper<K, V> implements AsyncMultiMap<K, V>, LambdaLo
   @Override
   public void remove(K k, V v, Handler<AsyncResult<Boolean>> handler) {
     logTrace(() -> "remove k = [" + k + "], v = [" + v + "], handler = [" + handler + "]");
-    executorService.<Boolean>remoteExecute(RpcServerObjDelegate.CALL_MULTIMAP_REMOVE.method(name, k, v), handler);
+    executorService.<Boolean>remoteExecute(CALL_MULTIMAP_REMOVE.method(name, k, v), handler);
   }
 
   @Override
   public void removeAllForValue(V v, Handler<AsyncResult<Void>> handler) {
-    executorService.<Void>remoteExecute(RpcServerObjDelegate.CALL_MULTIMAP_REMOVE_ALL.method(name, v), handler);
+    executorService.<Void>remoteExecute(CALL_MULTIMAP_REMOVE_ALL.method(name, v), handler);
   }
 
   @Override

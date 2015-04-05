@@ -23,6 +23,6 @@ public class JGroupsClusterWideMapTest extends ClusterWideMapTestDifferentNodes 
 
   @Override
   protected ClusterManager getClusterManager() {
-    return new JGroupsClusterManager("jgroups-test-config.xml");
+    return new JGroupsClusterManager();
   }
 }

@@ -25,6 +25,6 @@ public class JGroupsClusteredAsynchronousLockTest extends ClusteredAsynchronousL
 
   @Override
   protected ClusterManager getClusterManager() {
-    return new JGroupsClusterManager("jgroups-test-config.xml");
+    return new JGroupsClusterManager();
   }
 }

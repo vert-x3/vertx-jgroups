@@ -18,12 +18,15 @@ package io.vertx.test.core;
 
 import io.vertx.core.spi.cluster.ClusterManager;
 import io.vertx.java.spi.cluster.impl.jgroups.JGroupsClusterManager;
+import org.junit.Test;
+
+import java.util.concurrent.TimeUnit;
 
 public class JGroupsComplexHATest extends ComplexHATest {
 
   @Override
   protected ClusterManager getClusterManager() {
-    return new JGroupsClusterManager("jgroups-test-config.xml");
+    return new JGroupsClusterManager();
   }
 
 }

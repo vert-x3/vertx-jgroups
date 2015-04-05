@@ -26,6 +26,8 @@ import io.vertx.java.spi.cluster.impl.jgroups.services.RpcServerObjDelegate;
 
 import java.util.Map;
 
+import static io.vertx.java.spi.cluster.impl.jgroups.services.RpcServerObjDelegate.*;
+
 public class AsyncMapWrapper<K, V> implements AsyncMap<K, V> {
 
   private final static Logger log = LoggerFactory.getLogger(AsyncMapWrapper.class);
@@ -47,47 +49,47 @@ public class AsyncMapWrapper<K, V> implements AsyncMap<K, V> {
 
   @Override
   public void put(K k, V v, Handler<AsyncResult<Void>> handler) {
-    executorService.<Void>remoteExecute(RpcServerObjDelegate.CALL_MAP_PUT.method(name, k, v), handler);
+    executorService.<Void>remoteExecute(CALL_MAP_PUT.method(name, k, v), handler);
   }
 
   @Override
   public void put(K k, V v, long timeout, Handler<AsyncResult<Void>> handler) {
-    executorService.remoteExecute(RpcServerObjDelegate.CALL_MAP_PUT.method(name, k, v), timeout, handler);
+    executorService.remoteExecute(CALL_MAP_PUT.method(name, k, v), timeout, handler);
   }
 
   @Override
   public void putIfAbsent(K k, V v, Handler<AsyncResult<V>> handler) {
-    executorService.<V>remoteExecute(RpcServerObjDelegate.CALL_MAP_PUTIFABSENT.method(name, k, v), handler);
+    executorService.<V>remoteExecute(CALL_MAP_PUTIFABSENT.method(name, k, v), handler);
   }
 
   @Override
   public void putIfAbsent(K k, V v, long timeout, Handler<AsyncResult<V>> handler) {
-    executorService.<V>remoteExecute(RpcServerObjDelegate.CALL_MAP_PUTIFABSENT.method(name, k, v), timeout, handler);
+    executorService.<V>remoteExecute(CALL_MAP_PUTIFABSENT.method(name, k, v), timeout, handler);
   }
 
   @Override
   public void remove(K k, Handler<AsyncResult<V>> handler) {
-    executorService.<V>remoteExecute(RpcServerObjDelegate.CALL_MAP_REMOVE.method(name, k), handler);
+    executorService.<V>remoteExecute(CALL_MAP_REMOVE.method(name, k), handler);
   }
 
   @Override
   public void removeIfPresent(K k, V v, Handler<AsyncResult<Boolean>> handler) {
-    executorService.<Boolean>remoteExecute(RpcServerObjDelegate.CALL_MAP_REMOVEIFPRESENT.method(name, k, v), handler);
+    executorService.<Boolean>remoteExecute(CALL_MAP_REMOVEIFPRESENT.method(name, k, v), handler);
   }
 
   @Override
   public void replace(K k, V v, Handler<AsyncResult<V>> handler) {
-    executorService.<V>remoteExecute(RpcServerObjDelegate.CALL_MAP_REPLACE.method(name, k, v), handler);
+    executorService.<V>remoteExecute(CALL_MAP_REPLACE.method(name, k, v), handler);
   }
 
   @Override
   public void replaceIfPresent(K k, V oldValue, V newValue, Handler<AsyncResult<Boolean>> handler) {
-    executorService.<Boolean>remoteExecute(RpcServerObjDelegate.CALL_MAP_REPLACEIFPRESENT.method(name, k, oldValue, newValue), handler);
+    executorService.<Boolean>remoteExecute(CALL_MAP_REPLACEIFPRESENT.method(name, k, oldValue, newValue), handler);
   }
 
   @Override
   public void clear(Handler<AsyncResult<Void>> handler) {
-    executorService.<Void>remoteExecute(RpcServerObjDelegate.CALL_MAP_CLEAR.method(name), handler);
+    executorService.<Void>remoteExecute(CALL_MAP_CLEAR.method(name), handler);
   }
 
   @Override

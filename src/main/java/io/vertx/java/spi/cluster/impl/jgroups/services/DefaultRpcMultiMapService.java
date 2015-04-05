@@ -37,9 +37,7 @@ public class DefaultRpcMultiMapService implements RpcMultiMapService, LambdaLogg
   }
 
   public <K, V, R> R executeAndReturn(String name, Function<MultiMapImpl<K, V>, R> function) {
-    MultiMapImpl map = Optional
-        .ofNullable(maps.get(name))
-        .orElseThrow(() -> new IllegalStateException(String.format("MultiMapImpl [%s] not found.", name)));
+    MultiMapImpl map = maps.computeIfAbsent(name, n -> new MultiMapImpl());
     return function.apply((MultiMapImpl<K, V>) map);
   }
 

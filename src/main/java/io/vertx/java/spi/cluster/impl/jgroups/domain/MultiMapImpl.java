@@ -19,11 +19,13 @@ package io.vertx.java.spi.cluster.impl.jgroups.domain;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.impl.LoggerFactory;
 
-import java.io.*;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 public class MultiMapImpl<K, V> implements Externalizable {
 
@@ -74,12 +76,21 @@ public class MultiMapImpl<K, V> implements Externalizable {
 
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {
-    out.writeObject(cache);
+    out.writeInt(cache.size());
+    for (Map.Entry<K, ImmutableChoosableSet<V>> entry : cache.entrySet()) {
+      out.writeObject(entry.getKey());
+      out.writeObject(entry.getValue());
+    }
   }
 
   @Override
   public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-    cache = (Map<K, ImmutableChoosableSet<V>>) in.readObject();
+    int size = in.readInt();
+    for (int i = 0; i < size; i++) {
+      K key = (K) in.readObject();
+      ImmutableChoosableSet<V> value = (ImmutableChoosableSet<V>) in.readObject();
+      cache.put(key, value);
+    }
   }
 
   @Override

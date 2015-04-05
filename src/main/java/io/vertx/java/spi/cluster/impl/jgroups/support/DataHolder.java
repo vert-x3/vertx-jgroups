@@ -43,6 +43,11 @@ public class DataHolder<T> implements Externalizable {
   }
 
   @Override
+  public String toString() {
+    return "DataHolder{" + data + "}";
+  }
+
+  @Override
   public void writeExternal(ObjectOutput out) throws IOException {
     boolean isClusterSerializable = ClusterSerializable.class.isInstance(data);
     out.writeBoolean(isClusterSerializable);

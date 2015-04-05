@@ -29,6 +29,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import static io.vertx.java.spi.cluster.impl.jgroups.services.RpcServerObjDelegate.*;
+
 public class SyncMapWrapper<K, V> implements Map<K, V>, LambdaLogger {
 
   private final static Logger LOG = LoggerFactory.getLogger(SyncMapWrapper.class);
@@ -70,56 +72,26 @@ public class SyncMapWrapper<K, V> implements Map<K, V>, LambdaLogger {
 
   @Override
   public V put(K key, V value) {
-    executorService.remoteExecute(RpcServerObjDelegate.CALL_MAP_PUT.method(name, key, value), new Handler<AsyncResult<V>>() {
-      @Override
-      public void handle(AsyncResult<V> result) {
-        if (result.failed()) {
-          logInfo(()-> String.format("Remote PUT on Map [%s] failed for key [%s]", name, key));
-        }
-      }
-    });
-
-    return map.put(key, value);
+    logTrace(() -> "SyncMap.put k = [" + key + "], v = [" + value + "]");
+    return executorService.remoteExecute(CALL_MAP_PUT.method(name, key, value), 1000);
   }
 
   @Override
   public V remove(Object key) {
-    executorService.remoteExecute(RpcServerObjDelegate.CALL_MAP_REMOVE.method(name, key), new Handler<AsyncResult<V>>() {
-      @Override
-      public void handle(AsyncResult<V> result) {
-        if (result.failed()) {
-          logInfo(()-> String.format("Remote REMOVE on Map [%s] failed for key [%s]", name, key));
-        }
-      }
-    });
-
-    return map.remove(key);
+    logTrace(() -> "SyncMap.remove k = [" + key + "]");
+    return executorService.remoteExecute(CALL_MAP_REMOVE.method(name, key), 1000);
   }
 
   @Override
   public void putAll(Map<? extends K, ? extends V> data) {
-    executorService.remoteExecute(RpcServerObjDelegate.CALL_MAP_PUTALL.method(name, data), new Handler<AsyncResult<Void>>() {
-      @Override
-      public void handle(AsyncResult<Void> result) {
-        if (result.failed()) {
-          logInfo(()-> String.format("Remote PUTALL on Map [%s] failed", name));
-        }
-      }
-    });
-    map.putAll(data);
+    logTrace(() -> "SyncMap.putAll data = [" + data + "]");
+    executorService.remoteExecute(CALL_MAP_PUTALL.method(name, data), 1000);
   }
 
   @Override
   public void clear() {
-    executorService.remoteExecute(RpcServerObjDelegate.CALL_MAP_CLEAR.method(name), new Handler<AsyncResult<Void>>() {
-      @Override
-      public void handle(AsyncResult<Void> result) {
-        if (result.failed()) {
-          logInfo(()-> String.format("Remote CLEAR on Map [%s] failed", name));
-        }
-      }
-    });
-    map.clear();
+    logTrace(() -> "SyncMap.clear");
+    executorService.remoteExecute(CALL_MAP_CLEAR.method(name), 1000);
   }
 
   @Override

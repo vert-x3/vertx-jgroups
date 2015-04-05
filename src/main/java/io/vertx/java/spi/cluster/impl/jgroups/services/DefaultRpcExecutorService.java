@@ -18,10 +18,10 @@ package io.vertx.java.spi.cluster.impl.jgroups.services;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.VertxException;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.impl.LoggerFactory;
-import io.vertx.core.spi.cluster.VertxSPI;
 import io.vertx.java.spi.cluster.impl.jgroups.support.DataHolder;
 import io.vertx.java.spi.cluster.impl.jgroups.support.LambdaLogger;
 import org.jgroups.Message;
@@ -32,22 +32,34 @@ import org.jgroups.blocks.RpcDispatcher;
 import org.jgroups.util.Rsp;
 import org.jgroups.util.RspList;
 
-import java.util.Optional;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogger {
 
   private static final Logger LOG = LoggerFactory.getLogger(DefaultRpcExecutorService.class);
-  //  private static final RequestOptions REQUEST_OPTIONS_BLOCKING = new RequestOptions().setFlags(Message.Flag.NO_TOTAL_ORDER).setMode(ResponseMode.GET_ALL);
   private static final Message.Flag[] JGROUPS_FLAGS = new Message.Flag[]{Message.Flag.NO_TOTAL_ORDER};
 
-  private final VertxSPI vertx;
+  private final Vertx vertx;
   private final RpcDispatcher dispatcher;
+  private boolean active = true;
 
-  public DefaultRpcExecutorService(VertxSPI vertx, RpcDispatcher dispatcher) {
+  public DefaultRpcExecutorService(Vertx vertx, RpcDispatcher dispatcher) {
     this.vertx = vertx;
     this.dispatcher = dispatcher;
+  }
+
+  @Override
+  public <T> T remoteExecute(MethodCall action, long timeout) {
+    logTrace(() -> String.format("RemoteExecute sync action %s with timeout %s", action, timeout));
+    RequestOptions options = new RequestOptions()
+        .setFlags(JGROUPS_FLAGS)
+        .setMode(ResponseMode.GET_MAJORITY)
+        .setTimeout(timeout);
+    return execute(action, options);
   }
 
   @Override
@@ -58,47 +70,61 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
   @Override
   public <T> void remoteExecute(MethodCall action, long timeout, Handler<AsyncResult<T>> handler) {
     logTrace(() -> String.format("RemoteExecute action %s, handler %s", action, handler));
-    this.<T>asyncExecute(() -> this.<T>execute(action, timeout), handler);
+    RequestOptions options = new RequestOptions()
+        .setFlags(JGROUPS_FLAGS)
+        .setMode(ResponseMode.GET_ALL)
+        .setTimeout(timeout);
+    this.<T>asyncExecute(() -> this.<T>execute(action, options), handler);
   }
 
   @Override
   public <T> void asyncExecute(Supplier<T> action, Handler<AsyncResult<T>> handler) {
     logTrace(() -> String.format("AsyncExecute action %s, handler %s", action.toString(), handler.toString()));
-    vertx.executeBlocking(action::get, handler);
+    vertx.executeBlocking((event) -> event.complete(action.get()), handler);
   }
 
-  private <T> T execute(MethodCall action, long timeout) {
-    logTrace(() -> String.format("Execute action [%s]", action.toStringDetails()));
-    RspList<Object> responses;
-    try {
-      RequestOptions options = new RequestOptions()
-          .setFlags(JGROUPS_FLAGS)
-          .setMode(ResponseMode.GET_ALL)
-          .setTimeout(timeout);
-      responses = this.<Object>broadDispatch(action, options);
-    } catch (Exception e) {
-      throw new VertxException(e);
+  @Override
+  public void stop() {
+    active = false;
+  }
+
+  private <T> T execute(MethodCall action, RequestOptions options) {
+    if (!active) {
+      logError(() -> "Cannot execute remote dispatch from inactive nodes");
+      throw new VertxException("Cannot execute remote dispatch from inactive nodes");
     }
 
-    logTrace(() -> {
-      String values = responses.values().stream()
-          .map(Rsp::toString)
-          .collect(Collectors.joining(", ", "[", "]"));
+    Collection<Rsp<Object>> rsps = this.internalExecute(action, options);
 
-      return String.format("Response from method execution %s", values);
-    });
+    logTrace(
+        () -> rsps.stream().filter(Rsp::hasException),
+        rsp -> String.format("Execute method [%s] failed. Sender [%s], with exception [%s]", action, rsp.getSender(), rsp.getException()));
 
-    Optional<Rsp<Object>> optional = responses.values().stream()
-        .filter(Rsp::hasException)
-        .findFirst();
-    if (optional.isPresent()) {
-      throw new VertxException(optional.get().getException());
+    List<Object> list = rsps.stream()
+        .filter(((Predicate<Rsp<Object>>) Rsp::hasException).negate())
+        .map(Rsp::getValue)
+        .collect(Collectors.toList());
+    if (list == null || list.isEmpty()) {
+      return null;
     }
-    Object response = responses.getFirst();
-    if (DataHolder.class.isInstance(response)) {
-      return ((DataHolder<T>) response).unwrap();
+
+    Object object = list.get(0);
+    logTrace(() -> String.format("Remote execute -> Response [%s]", object));
+    if (object instanceof DataHolder) {
+      logTrace(() -> String.format("Remote execute -> Unwrap response to data [%s]", object));
+      return ((DataHolder<T>) object).unwrap();
     } else {
-      return (T) response;
+      return (T) object;
+    }
+  }
+
+  private <T> Collection<Rsp<T>> internalExecute(MethodCall action, RequestOptions options) {
+    logTrace(() -> String.format("Execute action [%s]", action.toStringDetails()));
+    try {
+      return this.<T>broadDispatch(action, options).values();
+    } catch (Exception e) {
+      logError(() -> String.format("Execute action [%s]", action.toStringDetails()));
+      throw new VertxException(e);
     }
   }
 
