@@ -16,12 +16,14 @@
 
 package io.vertx.test.core;
 
-import io.vertx.core.shareddata.Lock;
 import io.vertx.core.spi.cluster.ClusterManager;
 import io.vertx.java.spi.cluster.impl.jgroups.JGroupsClusterManager;
-import org.junit.Test;
 
 public class JGroupsClusteredAsynchronousLockTest extends ClusteredAsynchronousLockTest {
+
+  public JGroupsClusteredAsynchronousLockTest() {
+    disableThreadChecks();
+  }
 
   @Override
   protected ClusterManager getClusterManager() {

@@ -21,6 +21,10 @@ import io.vertx.java.spi.cluster.impl.jgroups.JGroupsClusterManager;
 
 public class JGroupsClusterWideMapTest extends ClusterWideMapTestDifferentNodes {
 
+  public JGroupsClusterWideMapTest() {
+    disableThreadChecks();
+  }
+
   @Override
   protected ClusterManager getClusterManager() {
     return new JGroupsClusterManager();
