@@ -145,6 +145,5 @@ public class CacheManager extends ReceiverAdapter implements LambdaLogger {
 
   public void stop() {
     dispatcher.stop();
-    executorService.stop();
   }
 }

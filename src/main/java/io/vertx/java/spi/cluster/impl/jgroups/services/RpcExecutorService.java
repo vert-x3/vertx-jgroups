@@ -30,7 +30,4 @@ public interface RpcExecutorService {
 
   <T> void remoteExecute(MethodCall action, long timeout, Handler<AsyncResult<T>> handler);
 
-  <T> void asyncExecute(Supplier<T> action, Handler<AsyncResult<T>> handler);
-
-  void stop();
 }

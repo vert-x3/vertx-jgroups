@@ -16,10 +16,7 @@
 
 package io.vertx.java.spi.cluster.impl.jgroups.services;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.VertxException;
+import io.vertx.core.*;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.impl.LoggerFactory;
 import io.vertx.java.spi.cluster.impl.jgroups.support.DataHolder;
@@ -29,14 +26,14 @@ import org.jgroups.blocks.MethodCall;
 import org.jgroups.blocks.RequestOptions;
 import org.jgroups.blocks.ResponseMode;
 import org.jgroups.blocks.RpcDispatcher;
+import org.jgroups.util.NotifyingFuture;
 import org.jgroups.util.Rsp;
 import org.jgroups.util.RspList;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogger {
 
@@ -45,7 +42,6 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
 
   private final Vertx vertx;
   private final RpcDispatcher dispatcher;
-  private boolean active = true;
 
   public DefaultRpcExecutorService(Vertx vertx, RpcDispatcher dispatcher) {
     this.vertx = vertx;
@@ -59,12 +55,19 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
         .setFlags(JGROUPS_FLAGS)
         .setMode(ResponseMode.GET_MAJORITY)
         .setTimeout(timeout);
-    return execute(action, options);
+
+    try {
+      NotifyingFuture<RspList<T>> notifyingFuture = this.<T>execute(action, options);
+      RspList<T> rspList = notifyingFuture.get(timeout, TimeUnit.MILLISECONDS);
+      return futureDone(rspList);
+    } catch (Exception e) {
+      throw new VertxException(e);
+    }
   }
 
   @Override
   public <T> void remoteExecute(MethodCall action, Handler<AsyncResult<T>> handler) {
-    this.<T>remoteExecute(action, 0, handler);
+    this.remoteExecute(action, 0, handler);
   }
 
   @Override
@@ -74,63 +77,51 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
         .setFlags(JGROUPS_FLAGS)
         .setMode(ResponseMode.GET_ALL)
         .setTimeout(timeout);
-    this.<T>asyncExecute(() -> this.<T>execute(action, options), handler);
-  }
-
-  @Override
-  public <T> void asyncExecute(Supplier<T> action, Handler<AsyncResult<T>> handler) {
-    logTrace(() -> String.format("AsyncExecute action %s, handler %s", action.toString(), handler.toString()));
-    vertx.executeBlocking((event) -> event.complete(action.get()), handler);
-  }
-
-  @Override
-  public void stop() {
-    active = false;
-  }
-
-  private <T> T execute(MethodCall action, RequestOptions options) {
-    if (!active) {
-      logError(() -> "Cannot execute remote dispatch from inactive nodes");
-      throw new VertxException("Cannot execute remote dispatch from inactive nodes");
-    }
-
-    Collection<Rsp<Object>> rsps = this.internalExecute(action, options);
-
-    logTrace(
-        () -> rsps.stream().filter(Rsp::hasException),
-        rsp -> String.format("Execute method [%s] failed. Sender [%s], with exception [%s]", action, rsp.getSender(), rsp.getException()));
-
-    List<Object> list = rsps.stream()
-        .filter(((Predicate<Rsp<Object>>) Rsp::hasException).negate())
-        .map(Rsp::getValue)
-        .collect(Collectors.toList());
-    if (list == null || list.isEmpty()) {
-      return null;
-    }
-
-    Object object = list.get(0);
-    logTrace(() -> String.format("Remote execute -> Response [%s]", object));
-    if (object instanceof DataHolder) {
-      logTrace(() -> String.format("Remote execute -> Unwrap response to data [%s]", object));
-      return ((DataHolder<T>) object).unwrap();
-    } else {
-      return (T) object;
-    }
-  }
-
-  private <T> Collection<Rsp<T>> internalExecute(MethodCall action, RequestOptions options) {
-    logTrace(() -> String.format("Execute action [%s]", action.toStringDetails()));
     try {
-      return this.<T>broadDispatch(action, options).values();
+      NotifyingFuture<RspList<T>> notifyingFuture = this.<T>execute(action, options);
+      notifyingFuture.setListener((future) -> {
+        try {
+          RspList<T> rspList = future.get();
+          T result = futureDone(rspList);
+          Future.succeededFuture(result);
+        } catch (Exception e) {
+          Future.failedFuture(e);
+        }
+      });
     } catch (Exception e) {
-      logError(() -> String.format("Execute action [%s]", action.toStringDetails()));
-      throw new VertxException(e);
+      handler.handle(Future.failedFuture(e));
     }
   }
 
-  private <T> RspList<T> broadDispatch(MethodCall action, RequestOptions options) throws Exception {
-    logTrace(() -> String.format("BroadDispatch action [%s] - options [%s]", action.toStringDetails(), options.toString()));
-    return dispatcher.callRemoteMethods(null, action, options);
+  private <T> NotifyingFuture<RspList<T>> execute(MethodCall action, RequestOptions options) throws Exception {
+    return this.<T>internalExecute(action, options);
+  }
+
+  private <T> NotifyingFuture<RspList<T>> internalExecute(MethodCall action, RequestOptions options) throws Exception {
+    return dispatcher.<T>callRemoteMethodsWithFuture(null, action, options);
+  }
+
+  private <T> T futureDone(RspList<T> rspList) {
+    Collection<Rsp<T>> values = rspList.values();
+
+    logTrace(() ->
+            values.parallelStream()
+                .filter(Rsp::hasException)
+                .map(rsp -> String.format("Execute method failed. Sender [%s], with exception [%s]", rsp.getSender(), rsp.getException()))
+                .reduce((a, b) -> a + "\n" + b)
+                .orElseGet(() -> "No exception found.")
+    );
+
+    T value = values.stream()
+        .filter(((Predicate<Rsp<T>>) Rsp::wasUnreachable).or(Rsp::hasException).negate())
+        .map(Rsp::getValue)
+        .reduce(null, (a, b) -> a);
+
+    if (value instanceof DataHolder) {
+      return ((DataHolder<T>) value).unwrap();
+    } else {
+      return value;
+    }
   }
 
   @Override

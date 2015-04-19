@@ -17,6 +17,7 @@
 package io.vertx.java.spi.cluster.impl.jgroups.domain.async;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.impl.LoggerFactory;
@@ -43,7 +44,7 @@ public class AsyncMapWrapper<K, V> implements AsyncMap<K, V> {
 
   @Override
   public void get(K k, Handler<AsyncResult<V>> handler) {
-    executorService.asyncExecute(() -> map.get(k), handler);
+    handler.handle(Future.succeededFuture(map.get(k)));
   }
 
   @Override
@@ -93,6 +94,6 @@ public class AsyncMapWrapper<K, V> implements AsyncMap<K, V> {
 
   @Override
   public void size(Handler<AsyncResult<Integer>> handler) {
-    executorService.asyncExecute(() -> map.size(), handler);
+    handler.handle(Future.succeededFuture(map.size()));
   }
 }

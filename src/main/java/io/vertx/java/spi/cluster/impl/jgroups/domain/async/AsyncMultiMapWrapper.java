@@ -17,6 +17,7 @@
 package io.vertx.java.spi.cluster.impl.jgroups.domain.async;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.impl.LoggerFactory;
@@ -52,11 +53,7 @@ public class AsyncMultiMapWrapper<K, V> implements AsyncMultiMap<K, V>, LambdaLo
   @Override
   public void get(K k, Handler<AsyncResult<ChoosableIterable<V>>> handler) {
     logTrace(() -> "get k = [" + k + "], handler = [" + handler + "]");
-    executorService.asyncExecute(() -> {
-      ImmutableChoosableSet<V> result = map.get(k);
-      logDebug(() -> "get k = [" + k + "], value = [" + result + "]");
-      return result;
-    }, handler);
+    handler.handle(Future.succeededFuture(map.get(k)));
   }
 
   @Override
