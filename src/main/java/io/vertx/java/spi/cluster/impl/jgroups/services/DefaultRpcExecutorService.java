@@ -115,6 +115,7 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
     T value = values.stream()
         .filter(((Predicate<Rsp<T>>) Rsp::wasUnreachable).or(Rsp::hasException).negate())
         .map(Rsp::getValue)
+        .filter((t) -> t != null)
         .reduce((a, b) -> a)
         .orElse(null);
 
