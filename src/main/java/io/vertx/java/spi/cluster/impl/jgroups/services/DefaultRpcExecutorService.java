@@ -104,13 +104,9 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
   private <T> T futureDone(RspList<T> rspList) {
     Collection<Rsp<T>> values = rspList.values();
 
-    logTrace(() ->
-            values.parallelStream()
-                .filter(Rsp::hasException)
-                .map(rsp -> String.format("Execute method failed. Sender [%s], with exception [%s]", rsp.getSender(), rsp.getException()))
-                .reduce((a, b) -> a + "\n" + b)
-                .orElseGet(() -> "No exception found.")
-    );
+    values.parallelStream()
+        .filter(Rsp::hasException)
+        .forEach(rsp -> logWarn(() -> String.format("Execute method failed. Sender [%s], with exception [%s]", rsp.getSender(), rsp.getException())));
 
     T value = values.stream()
         .filter(((Predicate<Rsp<T>>) Rsp::wasUnreachable).or(Rsp::hasException).negate())
