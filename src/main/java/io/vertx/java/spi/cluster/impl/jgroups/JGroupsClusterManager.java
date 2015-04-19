@@ -37,6 +37,7 @@ import org.jgroups.JChannel;
 import org.jgroups.blocks.atomic.CounterService;
 import org.jgroups.blocks.locking.LockService;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -47,7 +48,9 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
 
   private static final Logger LOG = LoggerFactory.getLogger(JGroupsClusterManager.class);
 
-  public static final String JGROUPS_CONFIG_FILE = "vertx.jgroups.filename";
+  public static final String DEFAULT_CONFIG_FILE = "default-jgroups.xml";
+  public static final String CONFIG_FILE = "jgroups.xml";
+
   public static final String CLUSTER_NAME = "JGROUPS_CLUSTER";
 
   private Vertx vertx;
@@ -65,14 +68,7 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
   private String address;
   private TopologyListener topologyListener;
 
-  private final String jgroupsConfigurationFile;
-
   public JGroupsClusterManager() {
-    this(System.getProperty(JGROUPS_CONFIG_FILE, "default-jgroups.xml"));
-  }
-
-  public JGroupsClusterManager(String jgroupsConfigurationFile) {
-    this.jgroupsConfigurationFile = jgroupsConfigurationFile;
   }
 
   @Override
@@ -150,7 +146,7 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
       synchronized (lock) {
         if(!active) {
           try {
-            channel = new JChannel(jgroupsConfigurationFile);
+            channel = new JChannel(getConfigStream());
             topologyListener = new TopologyListener(vertx);
             channel.setReceiver(topologyListener);
             channel.connect(CLUSTER_NAME);
@@ -208,5 +204,20 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
   @Override
   public Logger log() {
     return LOG;
+  }
+
+  private InputStream getConfigStream() {
+    ClassLoader ctxClsLoader = Thread.currentThread().getContextClassLoader();
+    InputStream is = null;
+    if (ctxClsLoader != null) {
+      is = ctxClsLoader.getResourceAsStream(CONFIG_FILE);
+    }
+    if (is == null) {
+      is = getClass().getClassLoader().getResourceAsStream(CONFIG_FILE);
+      if (is == null) {
+        is = getClass().getClassLoader().getResourceAsStream(DEFAULT_CONFIG_FILE);
+      }
+    }
+    return is;
   }
 }
