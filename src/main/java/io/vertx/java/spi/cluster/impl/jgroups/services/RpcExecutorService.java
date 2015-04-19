@@ -20,8 +20,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import org.jgroups.blocks.MethodCall;
 
-import java.util.function.Supplier;
-
 public interface RpcExecutorService {
 
   <T> T remoteExecute(MethodCall action, long timeout);

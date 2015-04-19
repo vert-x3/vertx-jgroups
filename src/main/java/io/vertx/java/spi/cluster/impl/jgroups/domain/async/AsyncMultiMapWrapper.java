@@ -23,7 +23,6 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.impl.LoggerFactory;
 import io.vertx.core.spi.cluster.AsyncMultiMap;
 import io.vertx.core.spi.cluster.ChoosableIterable;
-import io.vertx.java.spi.cluster.impl.jgroups.domain.ImmutableChoosableSet;
 import io.vertx.java.spi.cluster.impl.jgroups.domain.MultiMapImpl;
 import io.vertx.java.spi.cluster.impl.jgroups.services.RpcExecutorService;
 import io.vertx.java.spi.cluster.impl.jgroups.support.LambdaLogger;

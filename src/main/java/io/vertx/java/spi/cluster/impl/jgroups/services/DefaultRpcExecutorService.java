@@ -33,7 +33,6 @@ import org.jgroups.util.RspList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogger {
 
