@@ -60,7 +60,7 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
 
   private String lock = "Lock";
 
-  private volatile boolean active = false;
+  private boolean active = false;
   private String address;
   private TopologyListener topologyListener;
 
