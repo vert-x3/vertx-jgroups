@@ -51,8 +51,6 @@
     <vertx.version>3.0.0-SNAPSHOT</vertx.version>
 
     <junit.version>4.11</junit.version>
-
-    <vertx.jgroups.configuration>jgroups-test-config.xml</vertx.jgroups.configuration>
   </properties>
 
   <dependencies>
@@ -101,7 +99,6 @@
           <configuration>
             <systemPropertyVariables>
               <io.netty.leakDetectionLevel>PARANOID</io.netty.leakDetectionLevel>
-              <vertx.jgroups.filename>${vertx.jgroups.configuration}</vertx.jgroups.filename>
             </systemPropertyVariables>
             <!-- Needs to be small enough to run in a EC2 1.7GB small instance -->
             <!-- <argLine>-Xmx1500M</argLine> -->

@@ -22,7 +22,6 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.impl.LoggerFactory;
 import io.vertx.core.shareddata.AsyncMap;
 import io.vertx.java.spi.cluster.impl.jgroups.services.RpcExecutorService;
-import io.vertx.java.spi.cluster.impl.jgroups.services.RpcServerObjDelegate;
 
 import java.util.Map;
 

@@ -16,12 +16,9 @@
 
 package io.vertx.java.spi.cluster.impl.jgroups.domain;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.impl.LoggerFactory;
 import io.vertx.java.spi.cluster.impl.jgroups.services.RpcExecutorService;
-import io.vertx.java.spi.cluster.impl.jgroups.services.RpcServerObjDelegate;
 import io.vertx.java.spi.cluster.impl.jgroups.support.LambdaLogger;
 
 import java.util.Collection;

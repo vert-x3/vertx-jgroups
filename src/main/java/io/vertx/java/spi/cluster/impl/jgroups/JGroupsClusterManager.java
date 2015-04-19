@@ -32,7 +32,6 @@ import io.vertx.java.spi.cluster.impl.jgroups.domain.ClusteredCounterImpl;
 import io.vertx.java.spi.cluster.impl.jgroups.domain.ClusteredLockImpl;
 import io.vertx.java.spi.cluster.impl.jgroups.listeners.TopologyListener;
 import io.vertx.java.spi.cluster.impl.jgroups.support.LambdaLogger;
-import org.jgroups.Channel;
 import org.jgroups.JChannel;
 import org.jgroups.blocks.atomic.CounterService;
 import org.jgroups.blocks.locking.LockService;
@@ -40,9 +39,6 @@ import org.jgroups.blocks.locking.LockService;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
 
@@ -144,7 +140,7 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
   public void join(Handler<AsyncResult<Void>> handler) {
     vertx.executeBlocking((future) -> {
       synchronized (lock) {
-        if(!active) {
+        if (!active) {
           try {
             channel = new JChannel(getConfigStream());
             topologyListener = new TopologyListener(vertx);
@@ -173,7 +169,7 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
   }
 
   @Override
-  public  void leave(Handler<AsyncResult<Void>> handler) {
+  public void leave(Handler<AsyncResult<Void>> handler) {
     vertx.executeBlocking((future) -> {
       synchronized (lock) {
         if (active) {
