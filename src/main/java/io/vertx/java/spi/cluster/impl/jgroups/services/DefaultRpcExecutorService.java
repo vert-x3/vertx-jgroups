@@ -21,7 +21,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxException;
 import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.impl.LoggerFactory;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.java.spi.cluster.impl.jgroups.support.DataHolder;
 import io.vertx.java.spi.cluster.impl.jgroups.support.LambdaLogger;
 import org.jgroups.Message;

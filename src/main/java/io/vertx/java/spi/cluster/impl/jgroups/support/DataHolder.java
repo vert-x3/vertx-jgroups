@@ -53,7 +53,9 @@ public class DataHolder<T> implements Externalizable {
     out.writeBoolean(isClusterSerializable);
     if (isClusterSerializable) {
       out.writeUTF(data.getClass().getName());
-      byte[] bytes = ((ClusterSerializable) data).writeToBuffer().getBytes();
+      Buffer buffer = Buffer.buffer();
+      ((ClusterSerializable) data).writeToBuffer(buffer);
+      byte[] bytes = buffer.getBytes();
       out.write(bytes.length);
       out.write(bytes);
     } else {
@@ -71,7 +73,7 @@ public class DataHolder<T> implements Externalizable {
         data = (T) clazz.newInstance();
         byte[] bytes = new byte[in.read()];
         in.read(bytes);
-        ((ClusterSerializable) data).readFromBuffer(Buffer.buffer(bytes));
+        ((ClusterSerializable) data).readFromBuffer(0, Buffer.buffer(bytes));
       } catch (InstantiationException | IllegalAccessException e) {
         throw new VertxException(e);
       }
