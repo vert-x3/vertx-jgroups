@@ -17,7 +17,7 @@
 package io.vertx.java.spi.cluster.impl.jgroups.domain;
 
 import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.impl.LoggerFactory;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.io.Externalizable;
 import java.io.IOException;

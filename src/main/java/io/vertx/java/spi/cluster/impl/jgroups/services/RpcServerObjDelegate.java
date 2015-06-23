@@ -17,7 +17,7 @@
 package io.vertx.java.spi.cluster.impl.jgroups.services;
 
 import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.impl.LoggerFactory;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.java.spi.cluster.impl.jgroups.support.DataHolder;
 import io.vertx.java.spi.cluster.impl.jgroups.support.LambdaLogger;
 import org.jgroups.blocks.MethodCall;
