@@ -121,7 +121,7 @@ When running at the command line this is done by specifying the `cluster-host` o
 vertx run myverticle.js -cluster -cluster-host your-ip-address
 ----
 
-Where `your-ip-address` is the same IP address you specified in the Hazelcast configuration.
+Where `your-ip-address` is the same IP address you specified in the JGroups configuration.
 
 If using Vert.x programmatically you can specify this using `link:../../apidocs/io/vertx/core/VertxOptions.html#setClusterHost-java.lang.String-[setClusterHost]`.
 
