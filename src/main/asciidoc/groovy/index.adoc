@@ -5,7 +5,8 @@ This is a cluster manager implementation for Vert.x that uses http://www.jgroups
 In Vert.x a cluster manager is used for various functions including:
 
 * Discovery and group membership of Vert.x nodes in a cluster
-* Maintaining cluster wide topic subscriber lists (so we know which nodes are interested in which event bus addresses)
+* Maintaining cluster wide topic subscriber lists (so we know which nodes are interested in which event bus
+addresses)
 * Distributed Map support
 * Distributed Locks
 * Distributed Counters
@@ -14,11 +15,30 @@ Cluster managers *do not* handle the event bus inter-node transport, this is don
 
 == Using this cluster manager
 
-If you are using Vert.x from the command line, the jar corresponding to this cluster manager (it will be named `vertx-jgroups-${version}`.jar`
-should be in the `lib` directory of the Vert.x installation.
+To use the the cluster manager, add the following dependency to the _dependencies_ section of your build
+descriptor:
 
-If you want clustering with this cluster manager in your Vert.x Maven or Gradle project then just add a dependency to
-the artifact: `io.vertx:vertx-jgroups:${version}` in your project.
+* Maven (in your `pom.xml`):
+
+[source,xml,subs="+attributes"]
+----
+<dependency>
+  <groupId>{maven-groupId}</groupId>
+  <artifactId>{maven-artifactId}</artifactId>
+  <version>{maven-version}</version>
+</dependency>
+----
+
+* Gradle (in your `build.gradle` file):
+
+[source,groovy,subs="+attributes"]
+----
+compile {maven-groupId}:{maven-artifactId}:{maven-version}
+----
+
+
+If you are using Vert.x from the command line, the jar corresponding to this cluster manager (it will be named
+`vertx-jgroups-{maven-version}.jar` should be in the `lib` directory of the Vert.x installation.
 
 If the jar is on your classpath as above then Vert.x will automatically detect this and use it as the cluster manager.
 Please make sure you don't have any other cluster managers on your classpath or Vert.x might choose the wrong one.
@@ -26,26 +46,34 @@ Please make sure you don't have any other cluster managers on your classpath or 
 You can also specify the cluster manager programmatically if you are embedding Vert.x by specifying it on the options
 when you are creating your Vert.x instance, for example:
 
-[source,java]
+[source,groovy]
 ----
-ClusterManager mgr = new JGroupsClusterManager();
-
-VertxOptions options = new VertxOptions().setClusterManager(mgr);
-
-Vertx.clusteredVertx(options, res -> {
+import io.vertx.groovy.core.Vertx
+def mgr = new io.vertx.java.spi.cluster.impl.jgroups.JGroupsClusterManager()
+def options = [
+  clusterManager:mgr
+]
+Vertx.clusteredVertx(options, { res ->
   if (res.succeeded()) {
-    Vertx vertx = res.result();
+    def vertx = res.result()
   } else {
     // failed!
   }
-});
+})
+
 ----
 
 == Configuring this cluster manager
 
-Usually the cluster manager is configured by a file
-https://github.com/vert-x3/vertx-jgroups/blob/master/src/main/resources/default-jgroups.xml[`default-jgroups.xml`]
-which is packaged inside the jar.
+Usually the cluster manager is configured by a file:
+
+.default-jgroups.xml
+[source,xml]
+----
+include::../../resources/default-jgroups.xml[]
+----
+
+This file is packaged in the JGroup cluster Manager jar file.
 
 If you want to override this configuration you can provide a file called `jgroups.xml` on your classpath and this
 will be used instead.
@@ -68,7 +96,7 @@ If the default multicast configuration is not working here are some common cause
 When using `UDP`, IP multicasting is required, on some systems, multicast route(s) need to be added to
 the routing table otherwise, the default route will be used
 
-* Note that some systems don't consult the routing table for IP multicast routing, only for unicast routing
+Note that some systems don't consult the routing table for IP multicast routing, only for unicast routing
 
 MacOS example:
 
@@ -87,10 +115,9 @@ Please google for more information.
 
 Running in IPv6 without a correctly configured IPv6 routing table
 
-* By default, the JVM uses IPv6, but the routing table is not configured correctly, or the config uses IPv4
-* Solution: look at IPv6 routing or force use of IPv4 (`-Djava.net.preferIPv4Stack=true`)
-
-Wiki: https://developer.jboss.org/wiki/IPv6
+By default, the JVM uses IPv6, but the routing table is not configured correctly, or the config uses IPv4
+Solution: look at IPv6 routing or force use of IPv4 (`-Djava.net.preferIPv4Stack=true`). More details about this
+are available on https://developer.jboss.org/wiki/IPv6.
 
 
 === Using wrong network interface
@@ -103,16 +130,17 @@ Java parameter `jgroups.bind_addr` determines the network interface to bind to, 
 The following values are also recognized:
 
 * `global`: picks a global IP address if available. If not, falls back to a `site-local` IP address
-* `site_local`: picks a site local (non routable) IP address, e.g. from the +192.168.0.0+ or +10.0.0.0+ address range.
+* `site_local`: picks a site local (non routable) IP address, e.g. from the +192.168.0.0+ or +10.0.0.0+ address
+range.
 * `link_local`: picks a link-local IP address, from +169.254.1.0+ through +169.254.254.255+.
 * `non_loopback`: picks _any_ non loopback address.
 * `loopback`: picks a loopback address, e.g. +127.0.0.1+.
 * `match-interface`: picks an address which matches a pattern against the interface name,
-                  e.g. +match-interface:eth.\*+
+e.g. +match-interface:eth.\*+
 * `match-host`: picks an address which matches a pattern against the host name,
-             e.g. +match-host:linux.\*+
+e.g. +match-host:linux.\*+
 * `match-address`: picks an address which matches a pattern against the host address,
-                e.g. +match-address:192.168.\*+
+e.g. +match-address:192.168.\*+
 
 When running Vert.x is in clustered mode, you should also make sure that Vert.x knows about the correct interface.
 When running at the command line this is done by specifying the `cluster-host` option:

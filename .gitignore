@@ -34,3 +34,4 @@ Thumbs.db
 activemq-data
 *.epoch
 *.log
+.yardoc

@@ -8,4 +8,7 @@ Please see the in source asciidoc documentation or the main documentation on the
 of this component:
 
 * Web-site docs
-* link:src/main/asciidoc/index.adoc[in-source docs]
+* link:src/main/asciidoc/groovy/index.adoc[Groovy in-source docs]
+* link:src/main/asciidoc/java/index.adoc[Java in-source docs]
+* link:src/main/asciidoc/js/index.adoc[JS in-source docs]
+* link:src/main/asciidoc/ruby/index.adoc[Ruby in-source docs]
