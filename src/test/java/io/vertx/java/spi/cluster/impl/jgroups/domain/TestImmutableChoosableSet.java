@@ -126,21 +126,4 @@ public class TestImmutableChoosableSet {
     Assert.assertEquals(expectedOne, iterator.next());
     Assert.assertFalse(iterator.hasNext());
   }
-
-  @Test
-  public void testIteratorRemoveElement() {
-    String expectedOne = "expectedOne";
-    String expectedTwo = "expectedTwo";
-    String expectedThree = "expectedThree";
-    String expectedFour = "expectedFour";
-    String expectedFive = "expectedFive";
-
-    ImmutableChoosableSet<String> expected = new ImmutableChoosableSetImpl<>(expectedOne).add(expectedTwo).add(expectedThree).add(expectedFive);
-    ImmutableChoosableSet<String> value = new ImmutableChoosableSetImpl<>(expectedOne).add(expectedTwo).add(expectedThree).add(expectedFour).add(expectedFive);
-
-    value.remove(expectedFour);
-
-
-    Assert.assertEquals(expected, value);
-  }
 }

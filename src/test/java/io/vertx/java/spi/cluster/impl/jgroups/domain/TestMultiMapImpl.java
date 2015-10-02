@@ -28,7 +28,7 @@ public class TestMultiMapImpl {
 
   @Test
   public void testExternalizableOnEmptyMap() throws IOException, ClassNotFoundException {
-    MultiMapImpl<Long, String> expected = new MultiMapImpl<Long, String>("__cache");
+    MultiMapImpl<Long, String> expected = new MultiMapImpl<Long, String>();
 
     byte[] buffer;
     try (ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -38,7 +38,7 @@ public class TestMultiMapImpl {
       buffer = out.toByteArray();
     }
 
-    MultiMapImpl object = new MultiMapImpl("__cache");
+    MultiMapImpl object = new MultiMapImpl();
     try (ByteArrayInputStream input = new ByteArrayInputStream(buffer);
          ObjectInputStream stream = new ObjectInputStream(input);) {
       object.readExternal(stream);
@@ -46,37 +46,8 @@ public class TestMultiMapImpl {
   }
 
   @Test
-  public void testRemoveAll() throws IOException, ClassNotFoundException {
-    String EXPECTED_VALUE1 = "value1";
-    String EXPECTED_VALUE2 = "value2";
-    String EXPECTED_VALUE3 = "value3";
-
-    MultiMapImpl<Long, String> multiMap = new MultiMapImpl<Long, String>("__cache");
-
-    multiMap.add(1L, EXPECTED_VALUE1);
-    multiMap.add(2L, EXPECTED_VALUE2);
-    multiMap.add(3L, EXPECTED_VALUE3);
-
-    Assert.assertNotNull(multiMap.get(1L));
-    Assert.assertEquals(EXPECTED_VALUE1, multiMap.get(1L).head());
-    Assert.assertNotNull(multiMap.get(2L));
-    Assert.assertEquals(EXPECTED_VALUE2, multiMap.get(2L).head());
-    Assert.assertNotNull(multiMap.get(3L));
-    Assert.assertEquals(EXPECTED_VALUE3, multiMap.get(3L).head());
-
-    multiMap.removeAll(EXPECTED_VALUE2);
-
-    Assert.assertNotNull(multiMap.get(1L));
-    Assert.assertEquals(EXPECTED_VALUE1, multiMap.get(1L).head());
-    Assert.assertNotNull(multiMap.get(2L));
-    Assert.assertEquals(ImmutableChoosableSet.emptySet, multiMap.get(2L));
-    Assert.assertNotNull(multiMap.get(3L));
-    Assert.assertEquals(EXPECTED_VALUE3, multiMap.get(3L).head());
-  }
-
-  @Test
   public void testExternalizable() throws IOException, ClassNotFoundException {
-    MultiMapImpl<Long, String> expected = new MultiMapImpl<Long, String>("__cache");
+    MultiMapImpl<Long, String> expected = new MultiMapImpl<Long, String>();
     List<String> as = new ArrayList<>(Arrays.asList("a1", "a2", "a3", "a4"));
     List<String> bs = new ArrayList<>(Arrays.asList("b1"));
     List<String> cs = new ArrayList<>(Arrays.asList("c1", "c2"));
@@ -97,7 +68,7 @@ public class TestMultiMapImpl {
       buffer = out.toByteArray();
     }
 
-    MultiMapImpl object = new MultiMapImpl("__cache");
+    MultiMapImpl object = new MultiMapImpl();
     try (ByteArrayInputStream input = new ByteArrayInputStream(buffer);
          ObjectInputStream stream = new ObjectInputStream(input);) {
       object.readExternal(stream);

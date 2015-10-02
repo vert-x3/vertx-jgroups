@@ -51,12 +51,10 @@ public class ImmutableChoosableSetImpl<T> implements ImmutableChoosableSet<T> {
   public ImmutableChoosableSet<T> remove(T value) {
     checkSanity(value);
 
-    if(this.value.equals(value)) {
+    if (value.equals(this.value)) {
       return next;
-    } else {
-      this.next = next.remove(value);
-      return this;
     }
+    return next.remove(value).add(value);
   }
 
   @Override
