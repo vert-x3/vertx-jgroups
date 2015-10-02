@@ -36,7 +36,7 @@ public class DefaultRpcMultiMapService implements RpcMultiMapService, LambdaLogg
   }
 
   public <K, V, R> R executeAndReturn(String name, Function<MultiMapImpl<K, V>, R> function) {
-    MultiMapImpl map = maps.computeIfAbsent(name, n -> new MultiMapImpl());
+    MultiMapImpl map = maps.computeIfAbsent(name, n -> new MultiMapImpl(name));
     return function.apply((MultiMapImpl<K, V>) map);
   }
 
@@ -47,7 +47,7 @@ public class DefaultRpcMultiMapService implements RpcMultiMapService, LambdaLogg
 
   public boolean multiMapCreate(String name) {
     logDebug(() -> String.format("method multiMapCreate name[%s]", name));
-    maps.computeIfAbsent(name, (key) -> new MultiMapImpl());
+    maps.computeIfAbsent(name, (key) -> new MultiMapImpl(name));
     return true;
   }
 
