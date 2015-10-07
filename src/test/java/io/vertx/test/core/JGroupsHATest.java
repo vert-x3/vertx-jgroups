@@ -21,10 +21,6 @@ import io.vertx.java.spi.cluster.impl.jgroups.JGroupsClusterManager;
 
 public class JGroupsHATest extends HATest {
 
-  public JGroupsHATest() {
-    disableThreadChecks();
-  }
-
   @Override
   protected ClusterManager getClusterManager() {
     return new JGroupsClusterManager();

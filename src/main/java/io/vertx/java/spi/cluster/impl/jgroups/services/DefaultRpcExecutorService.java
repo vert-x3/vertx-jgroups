@@ -16,10 +16,7 @@
 
 package io.vertx.java.spi.cluster.impl.jgroups.services;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.VertxException;
+import io.vertx.core.*;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.java.spi.cluster.impl.jgroups.support.DataHolder;
@@ -42,9 +39,11 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
   private static final Logger LOG = LoggerFactory.getLogger(DefaultRpcExecutorService.class);
   private static final Message.Flag[] JGROUPS_FLAGS = new Message.Flag[]{Message.Flag.NO_TOTAL_ORDER};
 
+  private final Vertx vertx;
   private final RpcDispatcher dispatcher;
 
-  public DefaultRpcExecutorService(RpcDispatcher dispatcher) {
+  public DefaultRpcExecutorService(Vertx vertx, RpcDispatcher dispatcher) {
+    this.vertx = vertx;
     this.dispatcher = dispatcher;
   }
 
@@ -80,13 +79,16 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
     try {
       NotifyingFuture<RspList<T>> notifyingFuture = this.<T>execute(action, options);
       notifyingFuture.setListener((future) -> {
-        try {
-          RspList<T> rspList = future.get();
-          T result = futureDone(rspList);
-          handler.handle(Future.succeededFuture(result));
-        } catch (Exception e) {
-          handler.handle(Future.failedFuture(e));
-        }
+        vertx.executeBlocking(
+            (blockingCodeFuture) -> {
+              try {
+                RspList<T> rspList = future.get();
+                T result = futureDone(rspList);
+                blockingCodeFuture.complete(result);
+              } catch (Exception e) {
+                blockingCodeFuture.fail(e);
+              }
+            }, handler);
       });
     } catch (Exception e) {
       handler.handle(Future.failedFuture(e));

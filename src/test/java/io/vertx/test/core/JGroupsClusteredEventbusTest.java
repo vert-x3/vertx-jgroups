@@ -41,10 +41,6 @@ public class JGroupsClusteredEventbusTest extends ClusteredEventBusTest {
   private static int VERTX_NODE_1 = 1;
   private static int VERTX_NODE_2 = 2;
 
-  public JGroupsClusteredEventbusTest() {
-    disableThreadChecks();
-  }
-
   @Override
   protected ClusterManager getClusterManager() {
     return new JGroupsClusterManager();

@@ -21,10 +21,6 @@ import io.vertx.java.spi.cluster.impl.jgroups.JGroupsClusterManager;
 
 public class JGroupsClusteredAsynchronousLockTest extends ClusteredAsynchronousLockTest {
 
-  public JGroupsClusteredAsynchronousLockTest() {
-    disableThreadChecks();
-  }
-
   @Override
   protected ClusterManager getClusterManager() {
     return new JGroupsClusterManager();

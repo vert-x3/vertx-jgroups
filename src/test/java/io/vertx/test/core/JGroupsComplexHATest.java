@@ -24,10 +24,6 @@ import java.util.concurrent.TimeUnit;
 
 public class JGroupsComplexHATest extends ComplexHATest {
 
-  public JGroupsComplexHATest() {
-    disableThreadChecks();
-  }
-
   @Override
   protected ClusterManager getClusterManager() {
     return new JGroupsClusterManager();

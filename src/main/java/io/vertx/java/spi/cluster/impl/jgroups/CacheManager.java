@@ -68,7 +68,7 @@ public class CacheManager extends ReceiverAdapter implements LambdaLogger {
     this.dispatcher = new RpcDispatcher(this.channel, this, channel.getReceiver(), server_obj);
     this.dispatcher.setMethodLookup(server_obj.getMethodLookup());
 
-    this.executorService = new DefaultRpcExecutorService(dispatcher);
+    this.executorService = new DefaultRpcExecutorService(vertx, dispatcher);
   }
 
   public <K, V> void createAsyncMultiMap(String name, Handler<AsyncResult<AsyncMultiMap<K, V>>> handler) {
