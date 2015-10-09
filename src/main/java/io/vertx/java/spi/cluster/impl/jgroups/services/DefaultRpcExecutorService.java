@@ -79,19 +79,16 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
     try {
       NotifyingFuture<RspList<T>> notifyingFuture = this.<T>execute(action, options);
       notifyingFuture.setListener((future) -> {
-        vertx.executeBlocking(
-            (blockingCodeFuture) -> {
-              try {
-                RspList<T> rspList = future.get();
-                T result = futureDone(rspList);
-                blockingCodeFuture.complete(result);
-              } catch (Exception e) {
-                blockingCodeFuture.fail(e);
-              }
-            }, handler);
+        try {
+          RspList<T> rspList = future.get();
+          T result = futureDone(rspList);
+          vertx.runOnContext(h -> handler.handle(Future.succeededFuture(result)));
+        } catch (Exception e) {
+          vertx.runOnContext(h -> handler.handle(Future.failedFuture(e)));
+        }
       });
     } catch (Exception e) {
-      handler.handle(Future.failedFuture(e));
+      vertx.runOnContext(h -> handler.handle(Future.failedFuture(e)));
     }
   }
 
