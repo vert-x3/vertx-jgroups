@@ -23,14 +23,15 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.shareddata.AsyncMap;
 import io.vertx.java.spi.cluster.impl.jgroups.services.RpcExecutorService;
+import io.vertx.java.spi.cluster.impl.jgroups.support.LambdaLogger;
 
 import java.util.Map;
 
 import static io.vertx.java.spi.cluster.impl.jgroups.services.RpcServerObjDelegate.*;
 
-public class AsyncMapWrapper<K, V> implements AsyncMap<K, V> {
+public class AsyncMapWrapper<K, V> implements AsyncMap<K, V>, LambdaLogger {
 
-  private final static Logger log = LoggerFactory.getLogger(AsyncMapWrapper.class);
+  private final static Logger LOG = LoggerFactory.getLogger(AsyncMapWrapper.class);
 
   private final String name;
   private final Map<K, V> map;
@@ -44,56 +45,72 @@ public class AsyncMapWrapper<K, V> implements AsyncMap<K, V> {
 
   @Override
   public void get(K k, Handler<AsyncResult<V>> handler) {
-    handler.handle(Future.succeededFuture(map.get(k)));
+    logTrace(() -> "get k = [" + k + "], handler = [" + handler + "]");
+    executorService.runAsync(() -> map.get(k), handler);
   }
 
   @Override
   public void put(K k, V v, Handler<AsyncResult<Void>> handler) {
+    logTrace(() -> "put k = [" + k + "], v = [" + v + "], handler = [" + handler + "]");
     executorService.<Void>remoteExecute(CALL_MAP_PUT.method(name, k, v), handler);
   }
 
   @Override
   public void put(K k, V v, long timeout, Handler<AsyncResult<Void>> handler) {
+    logTrace(() -> "put k = [" + k + "], v = [" + v + "], timeout = [" + timeout + "] handler = [" + handler + "]");
     executorService.remoteExecute(CALL_MAP_PUT.method(name, k, v), timeout, handler);
   }
 
   @Override
   public void putIfAbsent(K k, V v, Handler<AsyncResult<V>> handler) {
+    logTrace(() -> "putIfAbsent k = [" + k + "], v = [" + v + "], handler = [" + handler + "]");
     executorService.<V>remoteExecute(CALL_MAP_PUTIFABSENT.method(name, k, v), handler);
   }
 
   @Override
   public void putIfAbsent(K k, V v, long timeout, Handler<AsyncResult<V>> handler) {
+    logTrace(() -> "putIfAbsent k = [" + k + "], v = [" + v + "], timeout = [" + timeout + "] handler = [" + handler + "]");
     executorService.<V>remoteExecute(CALL_MAP_PUTIFABSENT.method(name, k, v), timeout, handler);
   }
 
   @Override
   public void remove(K k, Handler<AsyncResult<V>> handler) {
+    logTrace(() -> "remove k = [" + k + "], handler = [" + handler + "]");
     executorService.<V>remoteExecute(CALL_MAP_REMOVE.method(name, k), handler);
   }
 
   @Override
   public void removeIfPresent(K k, V v, Handler<AsyncResult<Boolean>> handler) {
+    logTrace(() -> "removeIfPresent k = [" + k + "], v = [" + v + "], handler = [" + handler + "]");
     executorService.<Boolean>remoteExecute(CALL_MAP_REMOVEIFPRESENT.method(name, k, v), handler);
   }
 
   @Override
   public void replace(K k, V v, Handler<AsyncResult<V>> handler) {
+    logTrace(() -> "replace k = [" + k + "], v = [" + v + "], handler = [" + handler + "]");
     executorService.<V>remoteExecute(CALL_MAP_REPLACE.method(name, k, v), handler);
   }
 
   @Override
   public void replaceIfPresent(K k, V oldValue, V newValue, Handler<AsyncResult<Boolean>> handler) {
+    logTrace(() -> "replaceIfPresent k = [" + k + "], oldValue = [" + oldValue + "], newValue = [" + newValue + "], handler = [" + handler + "]");
     executorService.<Boolean>remoteExecute(CALL_MAP_REPLACEIFPRESENT.method(name, k, oldValue, newValue), handler);
   }
 
   @Override
   public void clear(Handler<AsyncResult<Void>> handler) {
+    logTrace(() -> "clear handler = [" + handler + "]");
     executorService.<Void>remoteExecute(CALL_MAP_CLEAR.method(name), handler);
   }
 
   @Override
   public void size(Handler<AsyncResult<Integer>> handler) {
-    handler.handle(Future.succeededFuture(map.size()));
+    logTrace(() -> "size handler = [" + handler + "]");
+    executorService.runAsync(map::size, handler);
+  }
+
+  @Override
+  public Logger log() {
+    return LOG;
   }
 }

@@ -18,11 +18,15 @@ package io.vertx.java.spi.cluster.impl.jgroups.services;
 
 import io.vertx.java.spi.cluster.impl.jgroups.support.DataHolder;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.Map;
 
 public interface RpcMapService {
 
-  <K, V> boolean mapCreate(String name);
+  <K, V> Map<K, V> mapCreate(String name);
 
   <K, V> void mapPut(String name, DataHolder<K> k, DataHolder<V> v);
 
@@ -39,4 +43,8 @@ public interface RpcMapService {
   <K, V> void mapClear(String name);
 
   <K, V> void mapPutAll(String name, Map<DataHolder<K>, DataHolder<V>> m);
+
+  void writeTo(OutputStream output) throws IOException;
+
+  void readFrom(InputStream input) throws IOException, ClassNotFoundException;
 }

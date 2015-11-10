@@ -28,12 +28,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class MultiMapImpl<K, V> implements Externalizable, LambdaLogger {
+public class MultiMapImpl<K, V> implements MultiMap<K,V>, LambdaLogger {
 
   private final static Logger log = LoggerFactory.getLogger(MultiMapImpl.class);
   private String name;
 
-  private Map<K, ImmutableChoosableSet<V>> cache = new ConcurrentHashMap<>();
+  private Map<K, ChoosableArrayList<V>> cache = new ConcurrentHashMap<>();
 
   public MultiMapImpl() {
   }
@@ -42,21 +42,24 @@ public class MultiMapImpl<K, V> implements Externalizable, LambdaLogger {
     this.name = name;
   }
 
+  @Override
   public void add(K k, V v) {
     logTrace(() -> String.format("MultiMapImpl.add name = [%s] and  k = [%s], v = [%s]", name, k, v));
     cache.compute(k, (key, oldValue) ->
             Optional.ofNullable(oldValue)
-                .orElseGet(() -> ImmutableChoosableSet.emptySet)
+                .orElseGet(() -> ChoosableArrayList.emptyChoosable)
                 .add(v)
     );
   }
 
-  public ImmutableChoosableSet<V> get(K k) {
-    ImmutableChoosableSet<V> v = cache.get(k);
+  @Override
+  public ChoosableArrayList<V> get(K k) {
+    ChoosableArrayList<V> v = cache.getOrDefault(k, ChoosableArrayList.emptyChoosable);
     logTrace(() -> String.format("MultiMapImpl.get name = [%s] and  k = [%s], v = [%s]", name, k, v));
     return v;
   }
 
+  @Override
   public boolean remove(K k, V v) {
     logTrace(() -> String.format("MultiMapImpl.remove name = [%s] and  k = [%s], v = [%s]", name, k, v));
     final boolean[] result = {false};
@@ -67,6 +70,7 @@ public class MultiMapImpl<K, V> implements Externalizable, LambdaLogger {
     return result[0];
   }
 
+  @Override
   public void removeAll(V v) {
     logTrace(() -> String.format("MultiMapImpl.removeAll name = [%s] and  v = [%s]", name, v));
     cache.replaceAll((k, oldValue) -> oldValue.remove(v));
@@ -77,7 +81,7 @@ public class MultiMapImpl<K, V> implements Externalizable, LambdaLogger {
     logTrace(() -> String.format("MultiMapImpl.writeExternal name = [%s] and  cache = {%s}", name, cache));
     out.writeInt(cache.size());
     out.writeUTF(name);
-    for (Map.Entry<K, ImmutableChoosableSet<V>> entry : cache.entrySet()) {
+    for (Map.Entry<K, ChoosableArrayList<V>> entry : cache.entrySet()) {
       out.writeObject(entry.getKey());
       out.writeObject(entry.getValue());
     }
@@ -90,7 +94,7 @@ public class MultiMapImpl<K, V> implements Externalizable, LambdaLogger {
     name = in.readUTF();
     for (int i = 0; i < size; i++) {
       K key = (K) in.readObject();
-      ImmutableChoosableSet<V> value = (ImmutableChoosableSet<V>) in.readObject();
+      ChoosableArrayList<V> value = (ChoosableArrayList<V>) in.readObject();
       cache.put(key, value);
     }
   }

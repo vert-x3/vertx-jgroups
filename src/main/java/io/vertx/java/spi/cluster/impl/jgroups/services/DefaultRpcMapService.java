@@ -21,6 +21,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.java.spi.cluster.impl.jgroups.support.DataHolder;
 import io.vertx.java.spi.cluster.impl.jgroups.support.LambdaLogger;
 
+import java.io.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -30,32 +31,12 @@ public class DefaultRpcMapService implements RpcMapService, LambdaLogger {
 
   private final static Logger LOG = LoggerFactory.getLogger(DefaultRpcMapService.class);
 
-  private final Map<String, Map> maps;
-
-  public DefaultRpcMapService(Map<String, Map> maps) {
-    this.maps = maps;
-  }
-
-  private <K, V> void execute(String name, Consumer<Map<K, V>> consumer) {
-    this.<K, V, Void>executeAndReturn(name, (map) -> {
-      consumer.accept(map);
-      return null;
-    });
-  }
-
-  public <K, V, R> R executeAndReturn(String name, Function<Map<K, V>, R> function) {
-    return function.apply((Map<K, V>) maps.computeIfAbsent(name, (k) -> new ConcurrentHashMap()));
-  }
-
-  public <K, V> Map<K, V> mapGet(String name) {
-    return this.<K, V, Map<K, V>>executeAndReturn(name, Function.identity());
-  }
+  private final Map<String, Map> maps = new ConcurrentHashMap<>();
 
   @Override
-  public <K, V> boolean mapCreate(String name) {
+  public <K, V> Map<K, V> mapCreate(String name) {
     logTrace(() -> String.format("method mapCreate name[%s]", name));
-    maps.computeIfAbsent(name, (key) -> new ConcurrentHashMap());
-    return true;
+    return maps.computeIfAbsent(name, (key) -> new ConcurrentHashMap());
   }
 
   @Override
@@ -97,13 +78,40 @@ public class DefaultRpcMapService implements RpcMapService, LambdaLogger {
   @Override
   public <K, V> void mapClear(String name) {
     logTrace(() -> "RpcMapService.clear name = [" + name + "]");
-    this.<K, V>execute(name, (map) -> map.clear());
+    this.<K, V>execute(name, Map::clear);
   }
 
   @Override
   public <K, V> void mapPutAll(String name, Map<DataHolder<K>, DataHolder<V>> m) {
     logTrace(() -> "RpcMapService.mapPutAll name = [" + name + "]");
     this.execute(name, (map) -> m.forEach((k, v) -> map.put(k.unwrap(), v.unwrap())));
+  }
+
+  @Override
+  public void writeTo(OutputStream output) throws IOException {
+    try (ObjectOutputStream oos = new ObjectOutputStream(output)) {
+      oos.writeObject(maps);
+      oos.flush();
+    }
+  }
+
+  @Override
+  public void readFrom(InputStream input) throws IOException, ClassNotFoundException {
+    try (ObjectInputStream oos = new ObjectInputStream(input)) {
+      Map<String, Map> m = (Map<String, Map>) oos.readObject();
+      maps.putAll(m);
+    }
+  }
+
+  private <K, V, R> R executeAndReturn(String name, Function<Map<K, V>, R> function) {
+    return function.apply((Map<K, V>) maps.computeIfAbsent(name, (k) -> new ConcurrentHashMap()));
+  }
+
+  private <K, V> void execute(String name, Consumer<Map<K, V>> consumer) {
+    this.<K, V, Void>executeAndReturn(name, (map) -> {
+      consumer.accept(map);
+      return null;
+    });
   }
 
   @Override

@@ -75,15 +75,21 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
   @Override
   public <K, V> void getAsyncMultiMap(String name, Handler<AsyncResult<AsyncMultiMap<K, V>>> handler) {
     logTrace(() -> String.format("Create new AsyncMultiMap [%s] on address [%s]", name, address));
-    checkCluster();
-    cacheManager.createAsyncMultiMap(name, handler);
+    vertx.<AsyncMultiMap<K, V>>executeBlocking((future) -> {
+      checkCluster();
+      AsyncMultiMap<K, V> map = cacheManager.<K, V>createAsyncMultiMap(name);
+      future.complete(map);
+    }, handler);
   }
 
   @Override
   public <K, V> void getAsyncMap(String name, Handler<AsyncResult<AsyncMap<K, V>>> handler) {
     logTrace(() -> String.format("Create new AsyncMap [%s] on address [%s]", name, address));
-    checkCluster();
-    cacheManager.createAsyncMap(name, handler);
+    vertx.<AsyncMap<K, V>>executeBlocking((future) -> {
+      checkCluster();
+      AsyncMap<K, V> map = cacheManager.<K, V>createAsyncMap(name);
+      future.complete(map);
+    }, handler);
   }
 
   @Override
@@ -148,7 +154,7 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
             channel.connect(CLUSTER_NAME);
 
             address = channel.getAddressAsString();
-            topologyListener.setAddress(channel.getAddress());
+//            topologyListener.setAddress(channel.getAddress());
 
             logInfo(() -> String.format("Node id [%s] join the cluster", this.getNodeID()));
 
@@ -175,8 +181,8 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
         if (active) {
           active = false;
           logInfo(() -> String.format("Node id [%s] leave the cluster", this.getNodeID()));
-          cacheManager.stop();
           channel.close();
+          cacheManager.stop();
           cacheManager = null;
           topologyListener = null;
           channel = null;

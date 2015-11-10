@@ -14,23 +14,24 @@
  * You may elect to redistribute this code under either of these licenses.
  */
 
-package io.vertx.java.spi.cluster.impl.jgroups.services;
+package io.vertx.java.spi.cluster.impl.jgroups.domain;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-import org.jgroups.blocks.MethodCall;
+import io.vertx.core.spi.cluster.ChoosableIterable;
+import org.jgroups.util.Streamable;
 
-import java.util.function.Supplier;
+import java.io.*;
+import java.util.Collections;
+import java.util.Iterator;
 
-public interface RpcExecutorService {
+public interface ChoosableArrayList<T> extends Streamable, Externalizable, ChoosableIterable<T> {
 
-  <T> void runAsync(Supplier<T> supplier, Handler<AsyncResult<T>> handler);
+  ChoosableArrayList<T> add(T value);
 
-  <T> T remoteExecute(MethodCall action, long timeout);
+  ChoosableArrayList<T> remove(T value);
 
-  <T> void remoteExecute(MethodCall action, Handler<AsyncResult<T>> handler);
+  T first();
 
-  <T> void remoteExecute(MethodCall action, long timeout, Handler<AsyncResult<T>> handler);
+  int size();
 
-  void stop();
+  ChoosableArrayList emptyChoosable = new EmptyChoosableArrayList<>();
 }

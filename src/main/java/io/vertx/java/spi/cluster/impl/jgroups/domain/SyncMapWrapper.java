@@ -31,6 +31,7 @@ import static io.vertx.java.spi.cluster.impl.jgroups.services.RpcServerObjDelega
 public class SyncMapWrapper<K, V> implements Map<K, V>, LambdaLogger {
 
   private final static Logger LOG = LoggerFactory.getLogger(SyncMapWrapper.class);
+  public static final int TIMEOUT = 1000;
 
   private final String name;
   private final Map<K, V> map;
@@ -69,26 +70,26 @@ public class SyncMapWrapper<K, V> implements Map<K, V>, LambdaLogger {
 
   @Override
   public V put(K key, V value) {
-    logTrace(() -> "SyncMap.put k = [" + key + "], v = [" + value + "]");
-    return executorService.remoteExecute(CALL_MAP_PUT.method(name, key, value), 1000);
+    logTrace(() -> "SyncMap.put name [" + name + "], k = [" + key + "], v = [" + value + "]");
+    return executorService.remoteExecute(CALL_MAP_PUT.method(name, key, value), TIMEOUT);
   }
 
   @Override
   public V remove(Object key) {
-    logTrace(() -> "SyncMap.remove k = [" + key + "]");
-    return executorService.remoteExecute(CALL_MAP_REMOVE.method(name, key), 1000);
+    logTrace(() -> "SyncMap.remove name [" + name + "], k = [" + key + "]");
+    return executorService.remoteExecute(CALL_MAP_REMOVE.method(name, key), TIMEOUT);
   }
 
   @Override
   public void putAll(Map<? extends K, ? extends V> data) {
-    logTrace(() -> "SyncMap.putAll data = [" + data + "]");
-    executorService.remoteExecute(CALL_MAP_PUTALL.method(name, data), 1000);
+    logTrace(() -> "SyncMap.putAll name [" + name + "], data = [" + data + "]");
+    executorService.remoteExecute(CALL_MAP_PUTALL.method(name, data), TIMEOUT);
   }
 
   @Override
   public void clear() {
-    logTrace(() -> "SyncMap.clear");
-    executorService.remoteExecute(CALL_MAP_CLEAR.method(name), 1000);
+    logTrace(() -> "SyncMap.clear name [" + name + "]");
+    executorService.remoteExecute(CALL_MAP_CLEAR.method(name), TIMEOUT);
   }
 
   @Override

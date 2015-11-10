@@ -26,7 +26,7 @@ public class TestImmutableChoosableSet {
   @Test
   public void testOneElementSet() {
     String expected = "expected";
-    ImmutableChoosableSet<String> set = new ImmutableChoosableSetImpl<>(expected);
+    ChoosableArrayList<String> set = new ChoosableArrayListImpl<String>().add(expected);
 
     Assert.assertEquals(expected, set.choose());
     Assert.assertEquals(expected, set.choose());
@@ -36,12 +36,12 @@ public class TestImmutableChoosableSet {
   public void testTwoElementSet() {
     String expectedOne = "expectedOne";
     String expectedTwo = "expectedTwo";
-    ImmutableChoosableSet<String> set = new ImmutableChoosableSetImpl<>(expectedOne).add(expectedTwo);
+    ChoosableArrayList<String> set = new ChoosableArrayListImpl<String>().add(expectedOne).add(expectedTwo);
 
-    Assert.assertEquals(expectedTwo, set.choose());
     Assert.assertEquals(expectedOne, set.choose());
     Assert.assertEquals(expectedTwo, set.choose());
     Assert.assertEquals(expectedOne, set.choose());
+    Assert.assertEquals(expectedTwo, set.choose());
   }
 
   @Test
@@ -52,30 +52,30 @@ public class TestImmutableChoosableSet {
     String expectedFour = "expectedFour";
     String expectedFive = "expectedFive";
 
-    ImmutableChoosableSet<String> value = new ImmutableChoosableSetImpl<>(expectedOne).add(expectedTwo);
+    ChoosableArrayList<String> value = new ChoosableArrayListImpl<String>().add(expectedOne).add(expectedTwo);
 
-    Assert.assertEquals(expectedTwo, value.choose());
     Assert.assertEquals(expectedOne, value.choose());
+    Assert.assertEquals(expectedTwo, value.choose());
 
     value = value.add(expectedThree).add(expectedFour).add(expectedFive);
 
-    Assert.assertEquals(expectedFive, value.choose());
-    Assert.assertEquals(expectedFour, value.choose());
     Assert.assertEquals(expectedThree, value.choose());
-    Assert.assertEquals(expectedTwo, value.choose());
-    Assert.assertEquals(expectedOne, value.choose());
-    Assert.assertEquals(expectedFive, value.choose());
     Assert.assertEquals(expectedFour, value.choose());
-    Assert.assertEquals(expectedThree, value.choose());
-    Assert.assertEquals(expectedTwo, value.choose());
+    Assert.assertEquals(expectedFive, value.choose());
     Assert.assertEquals(expectedOne, value.choose());
+    Assert.assertEquals(expectedTwo, value.choose());
+    Assert.assertEquals(expectedThree, value.choose());
+    Assert.assertEquals(expectedFour, value.choose());
+    Assert.assertEquals(expectedFive, value.choose());
+    Assert.assertEquals(expectedOne, value.choose());
+    Assert.assertEquals(expectedTwo, value.choose());
   }
 
   @Test
   public void testIteratorOneElementSet() {
     String expected = "expected";
 
-    ImmutableChoosableSet<String> value = new ImmutableChoosableSetImpl<>(expected);
+    ChoosableArrayList<String> value = new ChoosableArrayListImpl<String>().add(expected);
 
     Iterator<String> iterator = value.iterator();
     Assert.assertEquals(expected, iterator.next());
@@ -87,12 +87,12 @@ public class TestImmutableChoosableSet {
     String expectedOne = "expectedOne";
     String expectedTwo = "expectedTwo";
 
-    ImmutableChoosableSet<String> value = new ImmutableChoosableSetImpl<>(expectedOne).add(expectedTwo);
+    ChoosableArrayList<String> value = new ChoosableArrayListImpl<String>().add(expectedOne).add(expectedTwo);
 
     Iterator<String> iterator = value.iterator();
-    Assert.assertEquals(expectedTwo, iterator.next());
-    Assert.assertTrue(iterator.hasNext());
     Assert.assertEquals(expectedOne, iterator.next());
+    Assert.assertTrue(iterator.hasNext());
+    Assert.assertEquals(expectedTwo, iterator.next());
     Assert.assertFalse(iterator.hasNext());
   }
 
@@ -104,26 +104,26 @@ public class TestImmutableChoosableSet {
     String expectedFour = "expectedFour";
     String expectedFive = "expectedFive";
 
-    ImmutableChoosableSet<String> value = new ImmutableChoosableSetImpl<>(expectedOne).add(expectedTwo);
+    ChoosableArrayList<String> value = new ChoosableArrayListImpl<String>().add(expectedOne).add(expectedTwo);
 
     Iterator<String> iterator = value.iterator();
-    Assert.assertEquals(expectedTwo, iterator.next());
-    Assert.assertTrue(iterator.hasNext());
     Assert.assertEquals(expectedOne, iterator.next());
+    Assert.assertTrue(iterator.hasNext());
+    Assert.assertEquals(expectedTwo, iterator.next());
     Assert.assertFalse(iterator.hasNext());
 
     value = value.add(expectedThree).add(expectedFour).add(expectedFive);
 
     iterator = value.iterator();
-    Assert.assertEquals(expectedFive, iterator.next());
-    Assert.assertTrue(iterator.hasNext());
-    Assert.assertEquals(expectedFour, iterator.next());
-    Assert.assertTrue(iterator.hasNext());
-    Assert.assertEquals(expectedThree, iterator.next());
+    Assert.assertEquals(expectedOne, iterator.next());
     Assert.assertTrue(iterator.hasNext());
     Assert.assertEquals(expectedTwo, iterator.next());
     Assert.assertTrue(iterator.hasNext());
-    Assert.assertEquals(expectedOne, iterator.next());
+    Assert.assertEquals(expectedThree, iterator.next());
+    Assert.assertTrue(iterator.hasNext());
+    Assert.assertEquals(expectedFour, iterator.next());
+    Assert.assertTrue(iterator.hasNext());
+    Assert.assertEquals(expectedFive, iterator.next());
     Assert.assertFalse(iterator.hasNext());
   }
 
@@ -135,12 +135,59 @@ public class TestImmutableChoosableSet {
     String expectedFour = "expectedFour";
     String expectedFive = "expectedFive";
 
-    ImmutableChoosableSet<String> expected = new ImmutableChoosableSetImpl<>(expectedOne).add(expectedTwo).add(expectedThree).add(expectedFive);
-    ImmutableChoosableSet<String> value = new ImmutableChoosableSetImpl<>(expectedOne).add(expectedTwo).add(expectedThree).add(expectedFour).add(expectedFive);
+    ChoosableArrayList<String> expected = new ChoosableArrayListImpl<String>().add(expectedOne).add(expectedTwo).add(expectedThree).add(expectedFive);
+    ChoosableArrayList<String> value = new ChoosableArrayListImpl<String>().add(expectedOne).add(expectedTwo).add(expectedThree).add(expectedFour).add(expectedFive);
 
     value.remove(expectedFour);
 
 
     Assert.assertEquals(expected, value);
   }
+
+  @Test
+  public void testIteratorRemoveFirstElement() {
+    String expectedOne = "expectedOne";
+    String expectedTwo = "expectedTwo";
+    String expectedThree = "expectedThree";
+    String expectedFour = "expectedFour";
+    String expectedFive = "expectedFive";
+
+    ChoosableArrayList<String> expected = new ChoosableArrayListImpl<String>().add(expectedTwo)
+        .add(expectedThree)
+        .add(expectedFour)
+        .add(expectedFive);
+    ChoosableArrayList<String> value = new ChoosableArrayListImpl<String>().add(expectedOne)
+        .add(expectedTwo)
+        .add(expectedThree)
+        .add(expectedFour)
+        .add(expectedFive);
+
+    value.remove(expectedOne);
+
+    Assert.assertEquals(expected, value);
+  }
+
+  @Test
+  public void testIteratorRemoveLastElement() {
+    String expectedOne = "expectedOne";
+    String expectedTwo = "expectedTwo";
+    String expectedThree = "expectedThree";
+    String expectedFour = "expectedFour";
+    String expectedFive = "expectedFive";
+
+    ChoosableArrayList<String> expected = new ChoosableArrayListImpl<String>().add(expectedOne)
+        .add(expectedTwo)
+        .add(expectedThree)
+        .add(expectedFour);
+    ChoosableArrayList<String> value = new ChoosableArrayListImpl<String>().add(expectedOne)
+        .add(expectedTwo)
+        .add(expectedThree)
+        .add(expectedFour)
+        .add(expectedFive);
+
+    value.remove(expectedFive);
+
+    Assert.assertEquals(expected, value);
+  }
+
 }

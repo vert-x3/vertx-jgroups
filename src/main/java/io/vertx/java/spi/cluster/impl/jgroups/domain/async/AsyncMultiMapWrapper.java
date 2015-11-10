@@ -17,13 +17,12 @@
 package io.vertx.java.spi.cluster.impl.jgroups.domain.async;
 
 import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.spi.cluster.AsyncMultiMap;
 import io.vertx.core.spi.cluster.ChoosableIterable;
-import io.vertx.java.spi.cluster.impl.jgroups.domain.MultiMapImpl;
+import io.vertx.java.spi.cluster.impl.jgroups.domain.MultiMap;
 import io.vertx.java.spi.cluster.impl.jgroups.services.RpcExecutorService;
 import io.vertx.java.spi.cluster.impl.jgroups.support.LambdaLogger;
 
@@ -34,10 +33,10 @@ public class AsyncMultiMapWrapper<K, V> implements AsyncMultiMap<K, V>, LambdaLo
   private final static Logger LOG = LoggerFactory.getLogger(AsyncMultiMapWrapper.class);
 
   private final String name;
-  private final MultiMapImpl<K, V> map;
+  private final MultiMap<K, V> map;
   private final RpcExecutorService executorService;
 
-  public AsyncMultiMapWrapper(String name, MultiMapImpl<K, V> map, RpcExecutorService executorService) {
+  public AsyncMultiMapWrapper(String name, MultiMap<K, V> map, RpcExecutorService executorService) {
     this.name = name;
     this.map = map;
     this.executorService = executorService;
@@ -49,10 +48,9 @@ public class AsyncMultiMapWrapper<K, V> implements AsyncMultiMap<K, V>, LambdaLo
     executorService.<Void>remoteExecute(CALL_MULTIMAP_ADD.method(name, k, v), handler);
   }
 
-  @Override
   public void get(K k, Handler<AsyncResult<ChoosableIterable<V>>> handler) {
     logTrace(() -> "get k = [" + k + "], handler = [" + handler + "]");
-    handler.handle(Future.succeededFuture(map.get(k)));
+    executorService.runAsync(() -> map.get(k), handler);
   }
 
   @Override

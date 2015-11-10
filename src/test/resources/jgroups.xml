@@ -2,17 +2,19 @@
         xmlns="urn:org:jgroups"
         xsi:schemaLocation="urn:org:jgroups http://www.jgroups.org/schema/jgroups.xsd">
 
-    <SHARED_LOOPBACK />
-    <SHARED_LOOPBACK_PING />
+  <SHARED_LOOPBACK/>
+  <SHARED_LOOPBACK_PING/>
 
-    <pbcast.NAKACK2 become_server_queue_size="10" />
-    <UNICAST3 />
+  <BARRIER/>
 
-    <pbcast.GMS print_local_addr="true" join_timeout="500"
-                view_bundling="true"/>
+  <pbcast.NAKACK2 become_server_queue_size="10"/>
+  <UNICAST3/>
 
-    <pbcast.STATE/>
+  <pbcast.GMS print_local_addr="true" join_timeout="500"
+              view_bundling="true"/>
 
-    <COUNTER/>
-    <CENTRAL_LOCK use_thread_id_for_lock_owner="false"/>
+  <pbcast.STATE_TRANSFER/>
+
+  <COUNTER/>
+  <CENTRAL_LOCK use_thread_id_for_lock_owner="false"/>
 </config>

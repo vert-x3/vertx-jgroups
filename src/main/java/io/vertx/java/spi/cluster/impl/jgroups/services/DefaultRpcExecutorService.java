@@ -33,6 +33,7 @@ import org.jgroups.util.RspList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogger {
 
@@ -42,9 +43,22 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
   private final Vertx vertx;
   private final RpcDispatcher dispatcher;
 
+  private volatile boolean active = true;
+
   public DefaultRpcExecutorService(Vertx vertx, RpcDispatcher dispatcher) {
     this.vertx = vertx;
     this.dispatcher = dispatcher;
+  }
+
+  @Override
+  public <T> void runAsync(Supplier<T> supplier, Handler<AsyncResult<T>> handler) {
+    vertx.<T>executeBlocking((future) -> {
+      try {
+        future.complete(supplier.get());
+      } catch (Exception e) {
+        future.fail(e);
+      }
+    }, handler);
   }
 
   @Override
@@ -52,7 +66,7 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
     logTrace(() -> String.format("RemoteExecute sync action %s with timeout %s", action, timeout));
     RequestOptions options = new RequestOptions()
         .setFlags(JGROUPS_FLAGS)
-        .setMode(ResponseMode.GET_MAJORITY)
+        .setMode(ResponseMode.GET_ALL)
         .setTimeout(timeout);
 
     try {
@@ -79,17 +93,23 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
     try {
       NotifyingFuture<RspList<T>> notifyingFuture = this.<T>execute(action, options);
       notifyingFuture.setListener((future) -> {
-        try {
-          RspList<T> rspList = future.get();
-          T result = futureDone(rspList);
-          vertx.runOnContext(h -> handler.handle(Future.succeededFuture(result)));
-        } catch (Exception e) {
-          vertx.runOnContext(h -> handler.handle(Future.failedFuture(e)));
-        }
+        vertx.executeBlocking((f) -> {
+          try {
+            RspList<T> rspList = future.get();
+            f.complete(futureDone(rspList));
+          } catch (Exception e) {
+            f.fail(e);
+          }
+        }, handler);
       });
     } catch (Exception e) {
-      vertx.runOnContext(h -> handler.handle(Future.failedFuture(e)));
+      vertx.executeBlocking((f) -> f.fail(e), handler);
     }
+  }
+
+  @Override
+  public void stop() {
+    active = false;
   }
 
   private <T> NotifyingFuture<RspList<T>> execute(MethodCall action, RequestOptions options) throws Exception {
@@ -97,7 +117,11 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
   }
 
   private <T> NotifyingFuture<RspList<T>> internalExecute(MethodCall action, RequestOptions options) throws Exception {
-    return dispatcher.<T>callRemoteMethodsWithFuture(null, action, options);
+    if (active) {
+      return dispatcher.<T>callRemoteMethodsWithFuture(null, action, options);
+    } else {
+      throw new VertxException("Executor service is closed");
+    }
   }
 
   private <T> T futureDone(RspList<T> rspList) {
@@ -108,7 +132,9 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
         .forEach(rsp -> logWarn(() -> String.format("Execute method failed. Sender [%s], with exception [%s]", rsp.getSender(), rsp.getException())));
 
     T value = values.stream()
-        .filter(((Predicate<Rsp<T>>) Rsp::wasUnreachable).or(Rsp::hasException).negate())
+        .filter(Rsp::wasReceived)
+        .filter(((Predicate<Rsp<T>>) Rsp::hasException).negate())
+        .filter(((Predicate<Rsp<T>>) Rsp::wasUnreachable).negate())
         .map(Rsp::getValue)
         .filter((t) -> t != null)
         .reduce((a, b) -> a)

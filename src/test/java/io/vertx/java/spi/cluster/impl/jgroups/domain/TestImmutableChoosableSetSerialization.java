@@ -26,7 +26,7 @@ public class TestImmutableChoosableSetSerialization {
 
   @Test
   public void testOneValue() throws Exception {
-    ImmutableChoosableSet<Long> expected = new ImmutableChoosableSetImpl<>(1l);
+    ChoosableArrayList<Long> expected = new ChoosableArrayListImpl<Long>().add(1l);
     byte[] buffer;
 
     try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -42,18 +42,18 @@ public class TestImmutableChoosableSetSerialization {
       Object object = Util.readObject(inputStream);
 
       Assert.assertNotNull(object);
-      Assert.assertTrue(ImmutableChoosableSet.class.isAssignableFrom(object.getClass()));
+      Assert.assertTrue(ChoosableArrayList.class.isAssignableFrom(object.getClass()));
 
-      ImmutableChoosableSet<Long> value = (ImmutableChoosableSet<Long>) object;
-      Assert.assertEquals(expected.head(), value.head());
+      ChoosableArrayList<Long> value = (ChoosableArrayList<Long>) object;
+      Assert.assertEquals(expected.first(), value.first());
       // Should be empty set
-      Assert.assertEquals(expected.tail().isEmpty(), value.tail().isEmpty());
+      Assert.assertEquals(expected.size(), value.size());
     }
   }
 
   @Test
   public void testEmptyValue() throws Exception {
-    ImmutableChoosableSet<Long> expected = ImmutableChoosableSet.emptySet;
+    ChoosableArrayList<Long> expected = ChoosableArrayList.emptyChoosable;
     byte[] buffer;
 
     try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -69,9 +69,9 @@ public class TestImmutableChoosableSetSerialization {
       Object object = Util.readObject(inputStream);
 
       Assert.assertNotNull(object);
-      Assert.assertTrue(ImmutableChoosableSet.class.isAssignableFrom(object.getClass()));
+      Assert.assertTrue(ChoosableArrayList.class.isAssignableFrom(object.getClass()));
 
-      ImmutableChoosableSet<Long> value = (ImmutableChoosableSet<Long>) object;
+      ChoosableArrayList<Long> value = (ChoosableArrayList<Long>) object;
       // Should be empty set
       Assert.assertTrue(value.isEmpty());
     }

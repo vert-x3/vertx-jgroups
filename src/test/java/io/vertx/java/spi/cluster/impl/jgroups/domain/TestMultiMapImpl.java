@@ -22,6 +22,7 @@ import org.junit.Test;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 public class TestMultiMapImpl {
@@ -54,24 +55,35 @@ public class TestMultiMapImpl {
     MultiMapImpl<Long, String> multiMap = new MultiMapImpl<Long, String>("__cache");
 
     multiMap.add(1L, EXPECTED_VALUE1);
+    multiMap.add(2L, EXPECTED_VALUE1);
     multiMap.add(2L, EXPECTED_VALUE2);
+    multiMap.add(2L, EXPECTED_VALUE3);
+    multiMap.add(3L, EXPECTED_VALUE2);
     multiMap.add(3L, EXPECTED_VALUE3);
 
     Assert.assertNotNull(multiMap.get(1L));
-    Assert.assertEquals(EXPECTED_VALUE1, multiMap.get(1L).head());
+    Assert.assertEquals(EXPECTED_VALUE1, multiMap.get(1L).first());
     Assert.assertNotNull(multiMap.get(2L));
-    Assert.assertEquals(EXPECTED_VALUE2, multiMap.get(2L).head());
+    Assert.assertEquals(3, multiMap.get(2L).size());
+    Assert.assertEquals(EXPECTED_VALUE1, multiMap.get(2L).choose());
+    Assert.assertEquals(EXPECTED_VALUE2, multiMap.get(2L).choose());
+    Assert.assertEquals(EXPECTED_VALUE3, multiMap.get(2L).choose());
     Assert.assertNotNull(multiMap.get(3L));
-    Assert.assertEquals(EXPECTED_VALUE3, multiMap.get(3L).head());
+    Assert.assertEquals(2, multiMap.get(3L).size());
+    Assert.assertEquals(EXPECTED_VALUE2, multiMap.get(3L).choose());
+    Assert.assertEquals(EXPECTED_VALUE3, multiMap.get(3L).choose());
 
     multiMap.removeAll(EXPECTED_VALUE2);
 
     Assert.assertNotNull(multiMap.get(1L));
-    Assert.assertEquals(EXPECTED_VALUE1, multiMap.get(1L).head());
+    Assert.assertEquals(EXPECTED_VALUE1, multiMap.get(1L).first());
     Assert.assertNotNull(multiMap.get(2L));
-    Assert.assertEquals(ImmutableChoosableSet.emptySet, multiMap.get(2L));
+    Assert.assertEquals(2, multiMap.get(2L).size());
+    Assert.assertEquals(EXPECTED_VALUE1, multiMap.get(2L).choose());
+    Assert.assertEquals(EXPECTED_VALUE3, multiMap.get(2L).choose());
     Assert.assertNotNull(multiMap.get(3L));
-    Assert.assertEquals(EXPECTED_VALUE3, multiMap.get(3L).head());
+    Assert.assertEquals(1, multiMap.get(3L).size());
+    Assert.assertEquals(EXPECTED_VALUE3, multiMap.get(3L).choose());
   }
 
   @Test
@@ -103,26 +115,34 @@ public class TestMultiMapImpl {
       object.readExternal(stream);
     }
 
-    ImmutableChoosableSet values = object.get(1L);
+    ChoosableArrayList values = object.get(1L);
     Assert.assertNotNull(values);
-    while (!values.isEmpty()) {
-      Assert.assertTrue("Do not contain " + values.head(), as.contains(values.head()));
-      as.remove(values.head());
-      values = values.tail();
+    Iterator iterator = values.iterator();
+    while(iterator.hasNext()) {
+      Object next = iterator.next();
+      Assert.assertTrue("Do not contain " + next, as.contains(next));
+      as.remove(next);
     }
+    Assert.assertEquals(0, as.size());
+
     values = object.get(2L);
     Assert.assertNotNull(values);
-    while (!values.isEmpty()) {
-      Assert.assertTrue("Do not contain " + values.head(), bs.contains(values.head()));
-      bs.remove(values.head());
-      values = values.tail();
+    iterator = values.iterator();
+    while(iterator.hasNext()) {
+      Object next = iterator.next();
+      Assert.assertTrue("Do not contain " + next, bs.contains(next));
+      bs.remove(next);
     }
+    Assert.assertEquals(0, bs.size());
+
     values = object.get(3L);
     Assert.assertNotNull(values);
-    while (!values.isEmpty()) {
-      Assert.assertTrue("Do not contain " + values.head(), cs.contains(values.head()));
-      cs.remove(values.head());
-      values = values.tail();
+    iterator = values.iterator();
+    while(iterator.hasNext()) {
+      Object next = iterator.next();
+      Assert.assertTrue("Do not contain " + next, cs.contains(next));
+      cs.remove(next);
     }
+    Assert.assertEquals(0, cs.size());
   }
 }
