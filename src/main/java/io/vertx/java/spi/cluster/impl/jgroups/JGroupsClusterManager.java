@@ -58,7 +58,7 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
   private CounterService counterService;
   private LockService lockService;
 
-  private String lock = "Lock";
+  private final String lock = "Lock";
 
   private boolean active = false;
   private String address;
@@ -160,7 +160,7 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
 
             active = true;
           } catch (Exception e) {
-            throw new VertxException(e);
+            future.fail(e);
           }
         }
         future.complete();
@@ -191,7 +191,7 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
     return active;
   }
 
-  private <R> void checkCluster() {
+  private void checkCluster() {
     if (!active) {
       throw new VertxException("Cluster is not active!");
     }
