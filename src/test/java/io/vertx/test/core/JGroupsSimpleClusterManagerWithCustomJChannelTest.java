@@ -19,25 +19,50 @@ package io.vertx.test.core;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.java.spi.cluster.impl.jgroups.JGroupsClusterManager;
+import org.jgroups.JChannel;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
+import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Clement Escoffier - clement@apache.org
  */
-public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
+public class JGroupsSimpleClusterManagerWithCustomJChannelTest extends AsyncTestBase {
 
   static {
     System.setProperty("hazelcast.wait.seconds.before.join", "0");
     System.setProperty("hazelcast.local.localAddress", "127.0.0.1");
   }
 
+  private JChannel channel1;
+  private JChannel channel2;
+
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
+    InputStream stream1 = JGroupsClusterManager.getConfigStream();
+    InputStream stream2 = JGroupsClusterManager.getConfigStream();
+    channel1 = new JChannel(stream1);
+    channel2 = new JChannel(stream2);
+    stream1.close();
+    stream2.close();
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    super.tearDown();
+    channel1.close();
+    channel2.close();
+  }
+
   @Test
   public void testEventBusP2P() throws Exception {
-    JGroupsClusterManager mgr1 = new JGroupsClusterManager();
-    JGroupsClusterManager mgr2 = new JGroupsClusterManager();
+    JGroupsClusterManager mgr1 = new JGroupsClusterManager(channel1);
+    JGroupsClusterManager mgr2 = new JGroupsClusterManager(channel2);
 
     VertxOptions options1 = new VertxOptions().setClusterManager(mgr1).setClustered(true).setClusterHost("127.0.0.1");
     VertxOptions options2 = new VertxOptions().setClusterManager(mgr2).setClustered(true).setClusterHost("127.0.0.1");
@@ -72,20 +97,14 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
 
   @Test
   public void testEventBusPubSub() throws Exception {
-    JGroupsClusterManager mgr1 = new JGroupsClusterManager();
-    JGroupsClusterManager mgr2 = new JGroupsClusterManager();
-    JGroupsClusterManager mgr3 = new JGroupsClusterManager();
-    JGroupsClusterManager mgr4 = new JGroupsClusterManager();
+    JGroupsClusterManager mgr1 = new JGroupsClusterManager(channel1);
+    JGroupsClusterManager mgr2 = new JGroupsClusterManager(channel2);
 
     VertxOptions options1 = new VertxOptions().setClusterManager(mgr1).setClustered(true).setClusterHost("127.0.0.1");
     VertxOptions options2 = new VertxOptions().setClusterManager(mgr2).setClustered(true).setClusterHost("127.0.0.1");
-    VertxOptions options3 = new VertxOptions().setClusterManager(mgr3).setClustered(true).setClusterHost("127.0.0.1");
-    VertxOptions options4 = new VertxOptions().setClusterManager(mgr4).setClustered(true).setClusterHost("127.0.0.1");
 
     AtomicReference<Vertx> vertx1 = new AtomicReference<>();
     AtomicReference<Vertx> vertx2 = new AtomicReference<>();
-    AtomicReference<Vertx> vertx3 = new AtomicReference<>();
-    AtomicReference<Vertx> vertx4 = new AtomicReference<>();
 
     AtomicInteger counter = new AtomicInteger();
 
@@ -102,51 +121,23 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
 
     waitUntil(() -> vertx1.get() != null);
 
+    // Producer
     Vertx.clusteredVertx(options2, res -> {
       assertTrue(res.succeeded());
       assertNotNull(mgr2.getNodeID());
-      res.result().eventBus().consumer("news", message -> {
-        assertNotNull(message);
-        assertTrue(message.body().equals("hello"));
-        counter.incrementAndGet();
-      });
       vertx2.set(res.result());
-    });
-
-    waitUntil(() -> vertx2.get() != null);
-
-    Vertx.clusteredVertx(options3, res -> {
-      assertTrue(res.succeeded());
-      assertNotNull(mgr3.getNodeID());
-      res.result().eventBus().consumer("news", message -> {
-        assertNotNull(message);
-        assertTrue(message.body().equals("hello"));
-        counter.incrementAndGet();
-      });
-      vertx3.set(res.result());
-    });
-
-    waitUntil(() -> vertx3.get() != null);
-
-    // Producer
-    Vertx.clusteredVertx(options4, res -> {
-      assertTrue(res.succeeded());
-      assertNotNull(mgr4.getNodeID());
-      vertx4.set(res.result());
       res.result().eventBus().publish("news", "hello");
     });
 
-    waitUntil(() -> counter.get() == 3);
+    waitUntil(() -> counter.get() == 1);
     vertx1.get().close();
     vertx2.get().close();
-    vertx3.get().close();
-    vertx4.get().close();
   }
 
   @Test
   public void testEventBusWithReply() throws Exception {
-    JGroupsClusterManager mgr1 = new JGroupsClusterManager();
-    JGroupsClusterManager mgr2 = new JGroupsClusterManager();
+    JGroupsClusterManager mgr1 = new JGroupsClusterManager(channel1);
+    JGroupsClusterManager mgr2 = new JGroupsClusterManager(channel2);
 
     VertxOptions options1 = new VertxOptions().setClusterManager(mgr1).setClustered(true).setClusterHost("127.0.0.1");
     VertxOptions options2 = new VertxOptions().setClusterManager(mgr2).setClustered(true).setClusterHost("127.0.0.1");
@@ -186,8 +177,8 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
 
   @Test
   public void testSharedData() throws Exception {
-    JGroupsClusterManager mgr1 = new JGroupsClusterManager();
-    JGroupsClusterManager mgr2 = new JGroupsClusterManager();
+    JGroupsClusterManager mgr1 = new JGroupsClusterManager(channel1);
+    JGroupsClusterManager mgr2 = new JGroupsClusterManager(channel2);
 
     VertxOptions options1 = new VertxOptions().setClusterManager(mgr1).setClustered(true).setClusterHost("127.0.0.1");
     VertxOptions options2 = new VertxOptions().setClusterManager(mgr2).setClustered(true).setClusterHost("127.0.0.1");

@@ -33,7 +33,7 @@ descriptor:
 
 [source,groovy,subs="+attributes"]
 ----
-compile io.vertx:vertx-jgroups:3.2.0-SNAPSHOT
+compile 'io.vertx:vertx-jgroups:3.2.0-SNAPSHOT'
 ----
 
 
@@ -255,4 +255,28 @@ and also
 ----
 java.util.logging.ConsoleHandler.level=INFO
 java.util.logging.FileHandler.level=INFO
+----
+
+=== Using your own instance of JChannel
+
+You can instantiate `JGroupsClusterManager` with your own instance of
+`JChannel`:
+
+[source,groovy]
+----
+import io.vertx.groovy.core.Vertx
+def mgr = new io.vertx.java.spi.cluster.impl.jgroups.JGroupsClusterManager(channel)
+def options = [
+  clusterManager:mgr
+]
+Vertx.clusteredVertx(options, { res ->
+  if (res.succeeded()) {
+    def vertx = res.result()
+  } else {
+    // failed!
+  }
+})
+
+// Don't forget to close the channel when done.
+
 ----

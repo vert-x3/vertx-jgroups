@@ -33,7 +33,7 @@ descriptor:
 
 [source,groovy,subs="+attributes"]
 ----
-compile io.vertx:vertx-jgroups:3.2.0-SNAPSHOT
+compile 'io.vertx:vertx-jgroups:3.2.0-SNAPSHOT'
 ----
 
 
@@ -255,4 +255,28 @@ and also
 ----
 java.util.logging.ConsoleHandler.level=INFO
 java.util.logging.FileHandler.level=INFO
+----
+
+=== Using your own instance of JChannel
+
+You can instantiate `link:unavailable[JGroupsClusterManager]` with your own instance of
+`JChannel`:
+
+[source,ruby]
+----
+require 'vertx/vertx'
+mgr = Java::IoVertxJavaSpiClusterImplJgroups::JGroupsClusterManager.new(channel)
+options = {
+  'clusterManager' => mgr
+}
+Vertx::Vertx.clustered_vertx(options) { |res_err,res|
+  if (res_err == nil)
+    vertx = res
+  else
+    # failed!
+  end
+}
+
+# Don't forget to close the channel when done.
+
 ----

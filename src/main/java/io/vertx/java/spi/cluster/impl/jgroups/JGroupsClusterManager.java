@@ -64,7 +64,16 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
   private String address;
   private TopologyListener topologyListener;
 
+  private final boolean customChannel;
+
+
   public JGroupsClusterManager() {
+    customChannel = false;
+  }
+
+  public JGroupsClusterManager(JChannel channel) {
+    this.channel = channel;
+    customChannel = true;
   }
 
   @Override
@@ -148,13 +157,18 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
       synchronized (lock) {
         if (!active) {
           try {
-            channel = new JChannel(getConfigStream());
+
+            if (! customChannel) {
+              InputStream stream = getConfigStream();
+              channel = new JChannel(stream);
+              stream.close();
+            }
+
             topologyListener = new TopologyListener(vertx);
             channel.setReceiver(topologyListener);
             channel.connect(CLUSTER_NAME);
 
             address = channel.getAddressAsString();
-//            topologyListener.setAddress(channel.getAddress());
 
             logInfo(() -> String.format("Node id [%s] join the cluster", this.getNodeID()));
 
@@ -181,7 +195,12 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
         if (active) {
           active = false;
           logInfo(() -> String.format("Node id [%s] leave the cluster", this.getNodeID()));
-          channel.close();
+
+          // If the channel was provided externally, it must be closed outside.
+          if (! customChannel) {
+            channel.close();
+          }
+
           cacheManager.stop();
           cacheManager = null;
           topologyListener = null;
@@ -208,16 +227,16 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
     return LOG;
   }
 
-  private InputStream getConfigStream() {
+  public static InputStream getConfigStream() {
     ClassLoader ctxClsLoader = Thread.currentThread().getContextClassLoader();
     InputStream is = null;
     if (ctxClsLoader != null) {
       is = ctxClsLoader.getResourceAsStream(CONFIG_FILE);
     }
     if (is == null) {
-      is = getClass().getClassLoader().getResourceAsStream(CONFIG_FILE);
+      is = JGroupsClusterManager.class.getClassLoader().getResourceAsStream(CONFIG_FILE);
       if (is == null) {
-        is = getClass().getClassLoader().getResourceAsStream(DEFAULT_CONFIG_FILE);
+        is = JGroupsClusterManager.class.getClassLoader().getResourceAsStream(DEFAULT_CONFIG_FILE);
       }
     }
     return is;

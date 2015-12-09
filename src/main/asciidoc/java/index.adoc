@@ -33,7 +33,7 @@ descriptor:
 
 [source,groovy,subs="+attributes"]
 ----
-compile io.vertx:vertx-jgroups:3.2.0-SNAPSHOT
+compile 'io.vertx:vertx-jgroups:3.2.0-SNAPSHOT'
 ----
 
 
@@ -251,4 +251,22 @@ and also
 ----
 java.util.logging.ConsoleHandler.level=INFO
 java.util.logging.FileHandler.level=INFO
+----
+
+=== Using your own instance of JChannel
+
+You can instantiate `link:../../apidocs/io/vertx/java/spi/cluster/impl/jgroups/JGroupsClusterManager.html[JGroupsClusterManager]` with your own instance of
+`JChannel`:
+
+[source,java]
+----
+ClusterManager mgr = new JGroupsClusterManager(channel);
+VertxOptions options = new VertxOptions().setClusterManager(mgr);
+Vertx.clusteredVertx(options, res -> {
+  if (res.succeeded()) {
+    Vertx vertx = res.result();
+  } else {
+    // failed!
+  }
+});
 ----

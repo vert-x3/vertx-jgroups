@@ -33,7 +33,7 @@ descriptor:
 
 [source,groovy,subs="+attributes"]
 ----
-compile io.vertx:vertx-jgroups:3.2.0-SNAPSHOT
+compile 'io.vertx:vertx-jgroups:3.2.0-SNAPSHOT'
 ----
 
 
@@ -255,4 +255,28 @@ and also
 ----
 java.util.logging.ConsoleHandler.level=INFO
 java.util.logging.FileHandler.level=INFO
+----
+
+=== Using your own instance of JChannel
+
+You can instantiate `JGroupsClusterManager` with your own instance of
+`JChannel`:
+
+[source,js]
+----
+var Vertx = require("vertx-js/vertx");
+var mgr = new (Java.type("io.vertx.java.spi.cluster.impl.jgroups.JGroupsClusterManager"))(channel);
+var options = {
+  "clusterManager" : mgr
+};
+Vertx.clusteredVertx(options, function (res, res_err) {
+  if (res_err == null) {
+    var vertx = res;
+  } else {
+    // failed!
+  }
+});
+
+// Don't forget to close the channel when done.
+
 ----

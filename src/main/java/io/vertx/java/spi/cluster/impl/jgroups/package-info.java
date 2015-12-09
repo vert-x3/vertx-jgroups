@@ -34,7 +34,7 @@
  *
  * [source,groovy,subs="+attributes"]
  * ----
- * compile ${maven.groupId}:${maven.artifactId}:${maven.version}
+ * compile '${maven.groupId}:${maven.artifactId}:${maven.version}'
  * ----
  *
  *
@@ -244,6 +244,16 @@
  * ----
  * java.util.logging.ConsoleHandler.level=INFO
  * java.util.logging.FileHandler.level=INFO
+ * ----
+ *
+ * === Using your own instance of JChannel
+ *
+ * You can instantiate {@link io.vertx.java.spi.cluster.impl.jgroups.JGroupsClusterManager} with your own instance of
+ * `JChannel`:
+ *
+ * [source,$lang]
+ * ----
+ * {@link examples.Examples#example2(org.jgroups.JChannel)}
  * ----
  */
 @Document(fileName = "index.adoc")
