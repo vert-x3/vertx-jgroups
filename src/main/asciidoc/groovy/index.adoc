@@ -133,8 +133,7 @@ view_bundling="true"/>
 <UFC max_credits="2M"min_threshold="0.4"/>
 <MFC max_credits="2M" min_threshold="0.4"/>
 <FRAG2 frag_size="60K"/>
-<RSVP/>
-<pbcast.STATE/>
+<pbcast.STATE_TRANSFER/>
 
 <COUNTER/>
 <CENTRAL_LOCK use_thread_id_for_lock_owner="false"/>
