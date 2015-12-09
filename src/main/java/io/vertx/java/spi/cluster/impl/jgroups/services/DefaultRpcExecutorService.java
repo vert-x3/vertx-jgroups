@@ -103,7 +103,7 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
         }, handler);
       });
     } catch (Exception e) {
-      vertx.executeBlocking((f) -> f.fail(e), handler);
+      handler.handle(Future.failedFuture(e));
     }
   }
 
