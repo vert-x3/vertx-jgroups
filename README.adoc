@@ -7,7 +7,7 @@ This is a cluster manager implementation for Vert.x that uses http://www.jgroups
 Please see the in source asciidoc documentation or the main documentation on the web-site for a full description
 of this component:
 
-* Web-site docs
+* link:src/main/asciidoc/java/index.adoc[Java in-source docs]
 * link:src/main/asciidoc/groovy/index.adoc[Groovy in-source docs]
 * link:src/main/asciidoc/java/index.adoc[Java in-source docs]
 * link:src/main/asciidoc/js/index.adoc[JS in-source docs]
