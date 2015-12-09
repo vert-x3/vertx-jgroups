@@ -181,6 +181,7 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
             active = true;
           } catch (Exception e) {
             future.fail(e);
+            return;
           }
         }
         future.complete();
