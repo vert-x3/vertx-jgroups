@@ -19,9 +19,7 @@ package io.vertx.java.spi.cluster.impl.jgroups.domain;
 import io.vertx.core.spi.cluster.ChoosableIterable;
 import org.jgroups.util.Streamable;
 
-import java.io.*;
-import java.util.Collections;
-import java.util.Iterator;
+import java.io.Externalizable;
 
 public interface ChoosableArrayList<T> extends Streamable, Externalizable, ChoosableIterable<T> {
 

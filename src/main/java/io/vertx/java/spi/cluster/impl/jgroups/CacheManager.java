@@ -33,11 +33,8 @@ import org.jgroups.ReceiverAdapter;
 import org.jgroups.blocks.RpcDispatcher;
 
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class CacheManager extends ReceiverAdapter implements LambdaLogger {
 

@@ -45,14 +45,14 @@ public class ArrayUtils {
       if (choose == 0) {
         leftIndex++;
         rightIndex++;
-        comparedValues.add(new ComparedValue<T>(left, ComparedType.EQUAL));
+        comparedValues.add(new ComparedValue<>(left, ComparedType.EQUAL));
       } else {
         if (choose < 0) {
           leftIndex++;
-          comparedValues.add(new ComparedValue<T>(left, ComparedType.LEFT));
+          comparedValues.add(new ComparedValue<>(left, ComparedType.LEFT));
         } else {
           rightIndex++;
-          comparedValues.add(new ComparedValue<T>(right, ComparedType.RIGHT));
+          comparedValues.add(new ComparedValue<>(right, ComparedType.RIGHT));
         }
       }
     }

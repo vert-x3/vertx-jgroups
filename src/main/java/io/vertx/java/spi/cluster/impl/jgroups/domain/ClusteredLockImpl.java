@@ -38,6 +38,8 @@ public class ClusteredLockImpl implements io.vertx.core.shareddata.Lock, LambdaL
       logDebug(() -> String.format("Acquire lock on [%s] with timeout [%d]", lock, timeout));
       return lock.tryLock(timeout, TimeUnit.MILLISECONDS);
     } catch (InterruptedException e) {
+      // Ignore the exception but reset the interrupted flag.
+      Thread.interrupted();
     }
     return false;
   }

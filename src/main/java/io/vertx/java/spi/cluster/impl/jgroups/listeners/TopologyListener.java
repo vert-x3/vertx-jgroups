@@ -26,7 +26,6 @@ import io.vertx.java.spi.cluster.impl.jgroups.support.LambdaLogger;
 import org.jgroups.*;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;

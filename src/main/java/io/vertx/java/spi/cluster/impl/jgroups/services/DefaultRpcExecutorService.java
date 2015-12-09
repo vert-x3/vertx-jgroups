@@ -52,7 +52,7 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
 
   @Override
   public <T> void runAsync(Supplier<T> supplier, Handler<AsyncResult<T>> handler) {
-    vertx.<T>executeBlocking((future) -> {
+    vertx.executeBlocking((future) -> {
       try {
         future.complete(supplier.get());
       } catch (Exception e) {
@@ -92,16 +92,14 @@ public class DefaultRpcExecutorService implements RpcExecutorService, LambdaLogg
         .setTimeout(timeout);
     try {
       NotifyingFuture<RspList<T>> notifyingFuture = this.<T>execute(action, options);
-      notifyingFuture.setListener((future) -> {
-        vertx.executeBlocking((f) -> {
-          try {
-            RspList<T> rspList = future.get();
-            f.complete(futureDone(rspList));
-          } catch (Exception e) {
-            f.fail(e);
-          }
-        }, handler);
-      });
+      notifyingFuture.setListener((future) -> vertx.executeBlocking((f) -> {
+        try {
+          RspList<T> rspList = future.get();
+          f.complete(futureDone(rspList));
+        } catch (Exception e) {
+          f.fail(e);
+        }
+      }, handler));
     } catch (Exception e) {
       handler.handle(Future.failedFuture(e));
     }

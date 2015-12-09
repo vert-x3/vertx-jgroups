@@ -84,7 +84,7 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
   @Override
   public <K, V> void getAsyncMultiMap(String name, Handler<AsyncResult<AsyncMultiMap<K, V>>> handler) {
     logTrace(() -> String.format("Create new AsyncMultiMap [%s] on address [%s]", name, address));
-    vertx.<AsyncMultiMap<K, V>>executeBlocking((future) -> {
+    vertx.executeBlocking((future) -> {
       checkCluster();
       AsyncMultiMap<K, V> map = cacheManager.<K, V>createAsyncMultiMap(name);
       future.complete(map);
@@ -94,7 +94,7 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
   @Override
   public <K, V> void getAsyncMap(String name, Handler<AsyncResult<AsyncMap<K, V>>> handler) {
     logTrace(() -> String.format("Create new AsyncMap [%s] on address [%s]", name, address));
-    vertx.<AsyncMap<K, V>>executeBlocking((future) -> {
+    vertx.executeBlocking((future) -> {
       checkCluster();
       AsyncMap<K, V> map = cacheManager.<K, V>createAsyncMap(name);
       future.complete(map);

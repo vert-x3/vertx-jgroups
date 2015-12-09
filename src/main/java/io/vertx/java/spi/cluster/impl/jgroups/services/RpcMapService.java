@@ -20,7 +20,6 @@ import io.vertx.java.spi.cluster.impl.jgroups.support.DataHolder;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.Map;
 

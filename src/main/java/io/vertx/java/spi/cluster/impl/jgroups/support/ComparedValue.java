@@ -37,10 +37,7 @@ public class ComparedValue<T> {
 
     ComparedValue<?> that = (ComparedValue<?>) o;
 
-    if (!value.equals(that.value)) {
-      return false;
-    }
-    return compare.equals(that.compare);
+    return value.equals(that.value) && compare.equals(that.compare);
 
   }
 
