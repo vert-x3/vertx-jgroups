@@ -29,11 +29,6 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
 
-  static {
-    System.setProperty("hazelcast.wait.seconds.before.join", "0");
-    System.setProperty("hazelcast.local.localAddress", "127.0.0.1");
-  }
-
   @Test
   public void testEventBusP2P() throws Exception {
     JGroupsClusterManager mgr1 = new JGroupsClusterManager();
