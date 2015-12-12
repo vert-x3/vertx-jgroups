@@ -14,15 +14,22 @@
  * You may elect to redistribute this code under either of these licenses.
  */
 
-package io.vertx.test.core;
+package io.vertx.spi.cluster.jgroups.domain;
 
-import io.vertx.core.spi.cluster.ClusterManager;
-import io.vertx.spi.cluster.jgroups.JGroupsClusterManager;
+import io.vertx.core.spi.cluster.ChoosableIterable;
+import org.jgroups.util.Streamable;
 
-public class JGroupsClusteredAsynchronousLockTest extends ClusteredAsynchronousLockTest {
+import java.io.Externalizable;
 
-  @Override
-  protected ClusterManager getClusterManager() {
-    return new JGroupsClusterManager();
-  }
+public interface ChoosableArrayList<T> extends Streamable, Externalizable, ChoosableIterable<T> {
+
+  ChoosableArrayList<T> add(T value);
+
+  ChoosableArrayList<T> remove(T value);
+
+  T first();
+
+  int size();
+
+  ChoosableArrayList emptyChoosable = new EmptyChoosableArrayList<>();
 }

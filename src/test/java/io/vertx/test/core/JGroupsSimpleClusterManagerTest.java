@@ -18,7 +18,7 @@ package io.vertx.test.core;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
-import io.vertx.java.spi.cluster.impl.jgroups.JGroupsClusterManager;
+import io.vertx.spi.cluster.jgroups.JGroupsClusterManager;
 import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;

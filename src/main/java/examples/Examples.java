@@ -3,7 +3,7 @@ package examples;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.spi.cluster.ClusterManager;
-import io.vertx.java.spi.cluster.impl.jgroups.JGroupsClusterManager;
+import io.vertx.spi.cluster.jgroups.JGroupsClusterManager;
 import org.jgroups.JChannel;
 
 /**

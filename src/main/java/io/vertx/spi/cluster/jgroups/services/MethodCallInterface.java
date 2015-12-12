@@ -14,15 +14,25 @@
  * You may elect to redistribute this code under either of these licenses.
  */
 
-package io.vertx.test.core;
+package io.vertx.spi.cluster.jgroups.services;
 
-import io.vertx.core.spi.cluster.ClusterManager;
-import io.vertx.spi.cluster.jgroups.JGroupsClusterManager;
+import org.jgroups.blocks.MethodCall;
 
-public class JGroupsClusteredAsynchronousLockTest extends ClusteredAsynchronousLockTest {
+public interface MethodCallInterface {
 
-  @Override
-  protected ClusterManager getClusterManager() {
-    return new JGroupsClusterManager();
+  interface OneParameter extends MethodCallInterface {
+    MethodCall method(String name);
+  }
+
+  interface TwoParameters extends MethodCallInterface {
+    MethodCall method(String name, Object p1);
+  }
+
+  interface ThreeParameters extends MethodCallInterface {
+    MethodCall method(String name, Object p1, Object p2);
+  }
+
+  interface FourParameters extends MethodCallInterface {
+    MethodCall method(String name, Object p1, Object p2, Object p3);
   }
 }

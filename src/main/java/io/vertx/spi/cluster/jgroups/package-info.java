@@ -1,0 +1,261 @@
+/**
+ * = JGroups Cluster Manager
+ *
+ * This is a cluster manager implementation for Vert.x that uses http://www.jgroups.org[JGroups].
+ *
+ * In Vert.x a cluster manager is used for various functions including:
+ *
+ * * Discovery and group membership of Vert.x nodes in a cluster
+ * * Maintaining cluster wide topic subscriber lists (so we know which nodes are interested in which event bus
+ * addresses)
+ * * Distributed Map support
+ * * Distributed Locks
+ * * Distributed Counters
+ *
+ * Cluster managers *do not* handle the event bus inter-node transport, this is done directly by Vert.x with TCP connections.
+ *
+ * == Using this cluster manager
+ *
+ * To use the the cluster manager, add the following dependency to the _dependencies_ section of your build
+ * descriptor:
+ *
+ * * Maven (in your `pom.xml`):
+ *
+ * [source,xml,subs="+attributes"]
+ * ----
+ * <dependency>
+ *   <groupId>${maven.groupId}</groupId>
+ *   <artifactId>${maven.artifactId}</artifactId>
+ *   <version>${maven.version}</version>
+ * </dependency>
+ * ----
+ *
+ * * Gradle (in your `build.gradle` file):
+ *
+ * [source,groovy,subs="+attributes"]
+ * ----
+ * compile '${maven.groupId}:${maven.artifactId}:${maven.version}'
+ * ----
+ *
+ *
+ * If you are using Vert.x from the command line, the jar corresponding to this cluster manager (it will be named
+ * `vertx-jgroups-${maven.version}.jar` should be in the `lib` directory of the Vert.x installation. Don't forget to
+ * also add the `jgroups` jar too (`org.jgroups:jgroups:jar`).
+ *
+ * If the jar is on your classpath as above then Vert.x will automatically detect this and use it as the cluster manager.
+ * Please make sure you don't have any other cluster managers on your classpath or Vert.x might choose the wrong one.
+ * You can also specify it using the following system property:
+ * `-Dvertx.clusterManagerFactory=io.vertx.spi.cluster.jgroups.JGroupsClusterManager`
+ *
+ * You can also specify the cluster manager programmatically if you are embedding Vert.x by specifying it on the options
+ * when you are creating your Vert.x instance, for example:
+ *
+ * [source,$lang]
+ * ----
+ * {@link examples.Examples#example1()}
+ * ----
+ *
+ * == Configuring this cluster manager
+ *
+ * Usually the cluster manager is configured by a file:
+ *
+ * .default-jgroups.xml
+ * [source,xml]
+ * ----
+ * <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ * xmlns="urn:org:jgroups"
+ * xsi:schemaLocation="urn:org:jgroups http://www.jgroups.org/schema/jgroups.xsd">
+ *
+ * <UDP
+ * mcast_port="${jgroups.udp.mcast_port:45588}"
+ * ip_ttl="0"
+ * tos="8"
+ * ucast_recv_buf_size="5M"
+ * ucast_send_buf_size="5M"
+ * mcast_recv_buf_size="5M"
+ * mcast_send_buf_size="5M"
+ * max_bundle_size="64K"
+ * max_bundle_timeout="30"
+ * enable_diagnostics="true"
+ * thread_naming_pattern="cl"
+ *
+ * timer_type="new3"
+ * timer.min_threads="4"
+ * timer.max_threads="10"
+ * timer.keep_alive_time="3000"
+ * timer.queue_max_size="500"
+ *
+ * thread_pool.enabled="true"
+ * thread_pool.min_threads="2"
+ * thread_pool.max_threads="8"
+ * thread_pool.keep_alive_time="5000"
+ * thread_pool.queue_enabled="true"
+ * thread_pool.queue_max_size="100000"
+ * thread_pool.rejection_policy="discard"
+ *
+ * oob_thread_pool.enabled="true"
+ * oob_thread_pool.min_threads="1"
+ * oob_thread_pool.max_threads="8"
+ * oob_thread_pool.keep_alive_time="5000"
+ * oob_thread_pool.queue_enabled="false"
+ * oob_thread_pool.queue_max_size="100"
+ * oob_thread_pool.rejection_policy="discard"/>
+ *
+ * <PING/>
+ * <MERGE3 max_interval="30000" min_interval="10000"/>
+ * <FD_SOCK/>
+ * <FD_ALL/>
+ * <VERIFY_SUSPECT timeout="1500"/>
+ * <BARRIER/>
+ * <pbcast.NAKACK2 xmit_interval="500"
+ * xmit_table_num_rows="100"
+ * xmit_table_msgs_per_row="2000"
+ * xmit_table_max_compaction_time="30000"
+ * max_msg_batch_size="500"
+ * use_mcast_xmit="true"
+ * discard_delivered_msgs="true"/>
+ * <UNICAST3 xmit_table_num_rows="100" xmit_table_msgs_per_row="1000" xmit_table_max_compaction_time="30000" max_msg_batch_size="500"/>
+ * <pbcast.STABLE stability_delay="1000" desired_avg_gossip="50000"
+ * max_bytes="8m"/>
+ * <pbcast.GMS print_local_addr="true" join_timeout="2000"
+ * view_bundling="true"/>
+ * <UFC max_credits="2M"min_threshold="0.4"/>
+ * <MFC max_credits="2M" min_threshold="0.4"/>
+ * <FRAG2 frag_size="60K"/>
+ * <pbcast.STATE_TRANSFER/>
+ *
+ * <COUNTER/>
+ * <CENTRAL_LOCK use_thread_id_for_lock_owner="false"/>
+ * </config>
+ * ----
+ *
+ * This file is packaged in the JGroup cluster Manager jar file.
+ *
+ * If you want to override this configuration you can provide a file called `jgroups.xml` on your classpath and this
+ * will be used instead.
+ *
+ * The xml file is a JGroups configuration file and is described in detail in the documentation on the JGroups
+ * web-site.
+ *
+ * JGroups supports several different transports including multicast and TCP. The default configuration uses
+ * multicast so you must have multicast enabled on your network for this to work.
+ *
+ * For full documentation on how to configure the transport differently or use a different transport please consult the
+ * JGroups documentation.
+ *
+ * == Trouble shooting clustering
+ *
+ * If the default multicast configuration is not working here are some common causes:
+ *
+ * === Multicast not enabled on the machine.
+ *
+ * When using `UDP`, IP multicasting is required, on some systems, multicast route(s) need to be added to
+ * the routing table otherwise, the default route will be used
+ *
+ * Note that some systems don't consult the routing table for IP multicast routing, only for unicast routing
+ *
+ * MacOS example:
+ *
+ * ----
+ * # Adds a multicast route for 224.0.0.1-231.255.255.254
+ * sudo route add -net 224.0.0.0/5 127.0.0.1
+ *
+ * # Adds a multicast route for 232.0.0.1-239.255.255.254
+ * sudo route add -net 232.0.0.0/5 192.168.1.3
+ * ----
+ *
+ * Please google for more information.
+ *
+ *
+ * === Using IPv6 without a correctly configured routing table
+ *
+ * Running in IPv6 without a correctly configured IPv6 routing table
+ *
+ * By default, the JVM uses IPv6, but the routing table is not configured correctly, or the config uses IPv4
+ * Solution: look at IPv6 routing or force use of IPv4 (`-Djava.net.preferIPv4Stack=true`). More details about this
+ * are available on https://developer.jboss.org/wiki/IPv6.
+ *
+ *
+ * === Using wrong network interface
+ *
+ * If you have more than one network interface on your machine (and this can also be the case if you are running
+ * VPN software on your machine), then JGroups may be using the wrong one.
+ *
+ * Java parameter `jgroups.bind_addr` determines the network interface to bind to, e.g. `jgroups.bind_addr=192.168.1.5`.
+ *
+ * The following values are also recognized:
+ *
+ * * `global`: picks a global IP address if available. If not, falls back to a `site-local` IP address
+ * * `site_local`: picks a site local (non routable) IP address, e.g. from the +192.168.0.0+ or +10.0.0.0+ address
+ * range.
+ * * `link_local`: picks a link-local IP address, from +169.254.1.0+ through +169.254.254.255+.
+ * * `non_loopback`: picks _any_ non loopback address.
+ * * `loopback`: picks a loopback address, e.g. +127.0.0.1+.
+ * * `match-interface`: picks an address which matches a pattern against the interface name,
+ * e.g. +match-interface:eth.\*+
+ * * `match-host`: picks an address which matches a pattern against the host name,
+ * e.g. +match-host:linux.\*+
+ * * `match-address`: picks an address which matches a pattern against the host address,
+ * e.g. +match-address:192.168.\*+
+ *
+ * When running Vert.x is in clustered mode, you should also make sure that Vert.x knows about the correct interface.
+ * When running at the command line this is done by specifying the `cluster-host` option:
+ *
+ * ----
+ * vertx run myverticle.js -cluster -cluster-host your-ip-address
+ * ----
+ *
+ * Where `your-ip-address` is the same IP address you specified in the JGroups configuration.
+ *
+ * If using Vert.x programmatically you can specify this using `link:../../apidocs/io/vertx/core/VertxOptions.html#setClusterHost-java.lang.String-[setClusterHost]`.
+ *
+ *
+ * === Using a VPN
+ *
+ * This is a variation of the above case. VPN software often works by creating a virtual network interface which often
+ * doesn't support multicast. If you have a VPN running and you do not specify the correct interface to use in both the
+ * jgroups configuration and to Vert.x then the VPN interface may be chosen instead of the correct interface.
+ *
+ * So, if you have a VPN running you may have to configure both the JGroups and Vert.x to use the correct interface as
+ * described in the previous section.
+ *
+ * === When multicast is not available
+ *
+ * In some cases you may not be able to use multicast as it might not be available in your environment. In that case
+ * you should configure another transport, e.g. TCP  to use TCP sockets, or AWS when running on Amazon EC2.
+ *
+ * For more information on available JGroups transports and how to configure them please consult the JGroups
+ * documentation.
+ *
+ * === Enabling logging
+ *
+ * When trouble-shooting clustering issues with JGroups it's often useful to get some logging output from JGroups
+ * to see if it's forming a cluster properly. You can do this (when using the default JUL logging) by adding a file
+ * called `vertx-default-jul-logging.properties` on your classpath. This is a standard java.util.loging (JUL)
+ * configuration file. Inside it set:
+ *
+ * ----
+ * org.jgroups.level=INFO
+ * ----
+ *
+ * and also
+ *
+ * ----
+ * java.util.logging.ConsoleHandler.level=INFO
+ * java.util.logging.FileHandler.level=INFO
+ * ----
+ *
+ * === Using your own instance of JChannel
+ *
+ * You can instantiate {@link io.vertx.spi.cluster.jgroups.JGroupsClusterManager} with your own instance of
+ * `JChannel`:
+ *
+ * [source,$lang]
+ * ----
+ * {@link examples.Examples#example2(org.jgroups.JChannel)}
+ * ----
+ */
+@Document(fileName = "index.adoc")
+package io.vertx.spi.cluster.jgroups;
+
+import io.vertx.docgen.Document;

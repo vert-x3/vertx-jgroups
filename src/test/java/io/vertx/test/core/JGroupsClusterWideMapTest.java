@@ -17,7 +17,7 @@
 package io.vertx.test.core;
 
 import io.vertx.core.spi.cluster.ClusterManager;
-import io.vertx.java.spi.cluster.impl.jgroups.JGroupsClusterManager;
+import io.vertx.spi.cluster.jgroups.JGroupsClusterManager;
 
 public class JGroupsClusterWideMapTest extends ClusterWideMapTestDifferentNodes {
 

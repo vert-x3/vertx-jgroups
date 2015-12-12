@@ -23,7 +23,7 @@ import io.vertx.core.impl.VertxInternal;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.spi.cluster.ClusterManager;
-import io.vertx.java.spi.cluster.impl.jgroups.JGroupsClusterManager;
+import io.vertx.spi.cluster.jgroups.JGroupsClusterManager;
 import org.junit.Test;
 
 import java.util.concurrent.CountDownLatch;

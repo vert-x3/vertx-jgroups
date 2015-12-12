@@ -14,4 +14,4 @@
 # You may elect to redistribute this code under either of these licenses.
 #
 
-io.vertx.java.spi.cluster.impl.jgroups.JGroupsClusterManager
+io.vertx.spi.cluster.jgroups.JGroupsClusterManager

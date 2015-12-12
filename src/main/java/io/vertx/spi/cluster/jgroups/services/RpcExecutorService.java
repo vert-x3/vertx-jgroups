@@ -14,15 +14,23 @@
  * You may elect to redistribute this code under either of these licenses.
  */
 
-package io.vertx.test.core;
+package io.vertx.spi.cluster.jgroups.services;
 
-import io.vertx.core.spi.cluster.ClusterManager;
-import io.vertx.spi.cluster.jgroups.JGroupsClusterManager;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
+import org.jgroups.blocks.MethodCall;
 
-public class JGroupsClusteredAsynchronousLockTest extends ClusteredAsynchronousLockTest {
+import java.util.function.Supplier;
 
-  @Override
-  protected ClusterManager getClusterManager() {
-    return new JGroupsClusterManager();
-  }
+public interface RpcExecutorService {
+
+  <T> void runAsync(Supplier<T> supplier, Handler<AsyncResult<T>> handler);
+
+  <T> T remoteExecute(MethodCall action, long timeout);
+
+  <T> void remoteExecute(MethodCall action, Handler<AsyncResult<T>> handler);
+
+  <T> void remoteExecute(MethodCall action, long timeout, Handler<AsyncResult<T>> handler);
+
+  void stop();
 }
