@@ -7,7 +7,7 @@
   <parent>
     <groupId>io.vertx</groupId>
     <artifactId>vertx-ext-parent</artifactId>
-    <version>19</version>
+    <version>20</version>
   </parent>
 
   <artifactId>vertx-jgroups</artifactId>
@@ -17,8 +17,8 @@
 
   <properties>
     <stack.version>3.3.0-SNAPSHOT</stack.version>
-    <jgroups.version>3.6.1.Final</jgroups.version>
-    <junit.version>4.11</junit.version>
+    <jgroups.version>3.6.7.Final</jgroups.version>
+    <junit.version>4.12</junit.version>
     <mockito.version>1.9.5</mockito.version>
 
     <asciidoc.dir>${project.basedir}/src/main/asciidoc</asciidoc.dir>
