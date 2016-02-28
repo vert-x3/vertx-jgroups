@@ -60,7 +60,7 @@ public class ChoosableArrayListImpl<T> implements ChoosableArrayList<T> {
   }
 
   @Override
-  public T choose() {
+  public synchronized T choose() {
     if (roundRobinIndex >= values.size()) {
       roundRobinIndex = 0;
     }
