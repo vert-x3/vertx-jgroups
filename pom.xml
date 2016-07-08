@@ -11,12 +11,12 @@
   </parent>
 
   <artifactId>vertx-jgroups</artifactId>
-  <version>3.3.1</version>
+  <version>3.4.0-SNAPSHOT</version>
 
   <name>Vert.x JGroups Cluster Manager</name>
 
   <properties>
-    <stack.version>3.3.1</stack.version>
+    <stack.version>3.4.0-SNAPSHOT</stack.version>
     <jgroups.version>3.6.8.Final</jgroups.version>
     <junit.version>4.12</junit.version>
     <mockito.version>1.9.5</mockito.version>
