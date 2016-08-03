@@ -198,12 +198,13 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
           active = false;
           logInfo(() -> String.format("Node id [%s] leave the cluster", this.getNodeID()));
 
+          cacheManager.stop();
+
           // If the channel was provided externally, it must be closed outside.
           if (! customChannel) {
             channel.close();
           }
 
-          cacheManager.stop();
           cacheManager = null;
           topologyListener = null;
           channel = null;
