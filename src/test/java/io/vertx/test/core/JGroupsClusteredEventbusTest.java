@@ -24,6 +24,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.spi.cluster.ClusterManager;
 import io.vertx.spi.cluster.jgroups.JGroupsClusterManager;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.concurrent.CountDownLatch;
@@ -33,6 +35,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class JGroupsClusteredEventbusTest extends ClusteredEventBusTest {
 
   private static final Logger log = LoggerFactory.getLogger(JGroupsClusteredEventbusTest.class);
+
+  @Rule
+  public JGroupsCleanupRule testingJGroups = new JGroupsCleanupRule();
 
   public static final String WRAPPED_CHANNEL = "wrapper-channel";
   private static final String ADDRESS1 = "some-address1";

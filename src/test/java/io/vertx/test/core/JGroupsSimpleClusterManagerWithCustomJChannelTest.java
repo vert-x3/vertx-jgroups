@@ -24,6 +24,7 @@ import org.jgroups.JChannel;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.InputStream;
@@ -34,6 +35,9 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Clement Escoffier - clement@apache.org
  */
 public class JGroupsSimpleClusterManagerWithCustomJChannelTest extends AsyncTestBase {
+
+  @Rule
+  public JGroupsCleanupRule testingJGroups = new JGroupsCleanupRule();
 
   private JChannel channel1;
   private JChannel channel2;

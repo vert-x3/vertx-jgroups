@@ -16,10 +16,15 @@
 
 package io.vertx.test.core;
 
+import org.junit.Rule;
+
 import io.vertx.core.spi.cluster.ClusterManager;
 import io.vertx.spi.cluster.jgroups.JGroupsClusterManager;
 
 public class JGroupsComplexHATest extends ComplexHATest {
+
+  @Rule
+  public JGroupsCleanupRule testingJGroups = new JGroupsCleanupRule();
 
   @Override
   protected ClusterManager getClusterManager() {
