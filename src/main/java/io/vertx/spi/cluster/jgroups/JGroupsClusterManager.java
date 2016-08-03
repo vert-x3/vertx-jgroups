@@ -160,9 +160,9 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
           try {
 
             if (! customChannel) {
-              InputStream stream = getConfigStream();
-              channel = new JChannel(stream);
-              stream.close();
+              try (InputStream stream = getConfigStream()) {
+                channel = new JChannel(stream);
+              }
             }
 
             topologyListener = new TopologyListener(vertx);
