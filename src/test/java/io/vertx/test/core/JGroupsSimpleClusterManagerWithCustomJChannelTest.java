@@ -19,8 +19,10 @@ package io.vertx.test.core;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.spi.cluster.jgroups.JGroupsClusterManager;
+
 import org.jgroups.JChannel;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,21 +39,32 @@ public class JGroupsSimpleClusterManagerWithCustomJChannelTest extends AsyncTest
   private JChannel channel2;
 
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
-    InputStream stream1 = JGroupsClusterManager.getConfigStream();
-    InputStream stream2 = JGroupsClusterManager.getConfigStream();
-    channel1 = new JChannel(stream1);
-    channel2 = new JChannel(stream2);
-    stream1.close();
-    stream2.close();
+  public void setupJGroups() throws Exception {
+    try (InputStream stream1 = JGroupsClusterManager.getConfigStream()) {
+      channel1 = new JChannel(stream1);
+    }
+    try (InputStream stream2 = JGroupsClusterManager.getConfigStream()) {
+      channel2 = new JChannel(stream2);
+    }
   }
 
   @After
-  public void tearDown() throws Exception {
-    super.tearDown();
-    channel1.close();
-    channel2.close();
+  public void tearDownJGroups() throws Exception {
+    Assert.assertTrue( "Failed to close some testing channels", closeChannel(channel1) && closeChannel(channel2) );
+  }
+
+  private static boolean closeChannel(final JChannel someChannel) {
+    if (someChannel!=null) {
+      try {
+        someChannel.close();
+      }
+      catch (Throwable e) {
+        //This is interesting but allow closing all channels first
+        e.printStackTrace();
+        return false;
+      }
+    }
+    return true;
   }
 
   @Test
