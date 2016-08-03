@@ -34,6 +34,23 @@ public class JGroupsCleanupRule implements TestRule {
 
   private static final ConcurrentMap<AsciiString,Map<Address,SHARED_LOOPBACK>> routing_table = fetchRoutingTable();
 
+  private final boolean forgiving;
+
+  public JGroupsCleanupRule() {
+    this(false);
+  }
+
+  /**
+   * @param forgiving When set to true, the test will not be marked as failed if it left some channels open.
+   * @deprecated This shouldn't be used, as tests should have a better design. Only exists to allow
+   *   working around limitations of tests which might need changes in other projects and dependencies.
+   */
+  @Deprecated
+  public JGroupsCleanupRule(boolean forgiving) {
+    this.forgiving = forgiving;
+  }
+
+
   @Override
   public Statement apply(final Statement base, Description description) {
     return new Statement() {
@@ -52,7 +69,7 @@ public class JGroupsCleanupRule implements TestRule {
   protected void forceCleanup() {
     final int size = routing_table.size();
     routing_table.clear();
-    if (size != 0) {
+    if (size != 0 && !forgiving) {
       Assert.fail("Test didn't close all JGroups channels. Forcing a reset of the SHARED_LOOPBACK#routing_table to avoid affecting other tests.");
     }
   }

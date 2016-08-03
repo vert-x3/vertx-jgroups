@@ -37,7 +37,7 @@ public class JGroupsClusteredEventbusTest extends ClusteredEventBusTest {
   private static final Logger log = LoggerFactory.getLogger(JGroupsClusteredEventbusTest.class);
 
   @Rule
-  public JGroupsCleanupRule testingJGroups = new JGroupsCleanupRule();
+  public JGroupsCleanupRule testingJGroups = new JGroupsCleanupRule(true);
 
   public static final String WRAPPED_CHANNEL = "wrapper-channel";
   private static final String ADDRESS1 = "some-address1";

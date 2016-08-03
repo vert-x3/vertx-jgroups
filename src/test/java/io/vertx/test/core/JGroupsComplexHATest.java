@@ -24,7 +24,7 @@ import io.vertx.spi.cluster.jgroups.JGroupsClusterManager;
 public class JGroupsComplexHATest extends ComplexHATest {
 
   @Rule
-  public JGroupsCleanupRule testingJGroups = new JGroupsCleanupRule();
+  public JGroupsCleanupRule testingJGroups = new JGroupsCleanupRule(true);
 
   @Override
   protected ClusterManager getClusterManager() {
