@@ -243,4 +243,14 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
     }
     return is;
   }
+
+  /**
+   * Mostly useful for testing: closes the JChannel if it's still open, unless it was provided
+   * to the constructor.
+   */
+  public void kill() {
+    if (channel!=null && !customChannel && channel.isOpen()) {
+      channel.close();
+    }
+  }
 }

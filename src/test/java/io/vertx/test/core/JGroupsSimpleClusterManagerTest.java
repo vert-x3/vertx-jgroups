@@ -68,6 +68,8 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
     await();
     vertx1.get().close();
     vertx2.get().close();
+    mgr1.kill();
+    mgr2.kill();
   }
 
   @Test
@@ -141,6 +143,10 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
     vertx2.get().close();
     vertx3.get().close();
     vertx4.get().close();
+    mgr1.kill();
+    mgr2.kill();
+    mgr3.kill();
+    mgr4.kill();
   }
 
   @Test
@@ -182,6 +188,8 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
     await();
     vertx1.get().close();
     vertx2.get().close();
+    mgr1.kill();
+    mgr2.kill();
   }
 
   @Test
@@ -222,5 +230,7 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
     await();
     vertx1.get().close();
     vertx2.get().close();
+    mgr1.kill();
+    mgr2.kill();
   }
 }
