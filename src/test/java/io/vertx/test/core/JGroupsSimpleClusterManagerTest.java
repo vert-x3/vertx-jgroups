@@ -19,6 +19,8 @@ package io.vertx.test.core;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.spi.cluster.jgroups.JGroupsClusterManager;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -28,6 +30,9 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Clement Escoffier - clement@apache.org
  */
 public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
+
+  @Rule
+  public JGroupsCleanupRule testingJGroups = new JGroupsCleanupRule();
 
   @Test
   public void testEventBusP2P() throws Exception {
@@ -63,6 +68,8 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
     await();
     vertx1.get().close();
     vertx2.get().close();
+    mgr1.kill();
+    mgr2.kill();
   }
 
   @Test
@@ -136,6 +143,10 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
     vertx2.get().close();
     vertx3.get().close();
     vertx4.get().close();
+    mgr1.kill();
+    mgr2.kill();
+    mgr3.kill();
+    mgr4.kill();
   }
 
   @Test
@@ -177,6 +188,8 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
     await();
     vertx1.get().close();
     vertx2.get().close();
+    mgr1.kill();
+    mgr2.kill();
   }
 
   @Test
@@ -217,5 +230,7 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
     await();
     vertx1.get().close();
     vertx2.get().close();
+    mgr1.kill();
+    mgr2.kill();
   }
 }

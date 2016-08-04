@@ -160,9 +160,9 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
           try {
 
             if (! customChannel) {
-              InputStream stream = getConfigStream();
-              channel = new JChannel(stream);
-              stream.close();
+              try (InputStream stream = getConfigStream()) {
+                channel = new JChannel(stream);
+              }
             }
 
             topologyListener = new TopologyListener(vertx);
@@ -198,12 +198,13 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
           active = false;
           logInfo(() -> String.format("Node id [%s] leave the cluster", this.getNodeID()));
 
+          cacheManager.stop();
+
           // If the channel was provided externally, it must be closed outside.
           if (! customChannel) {
             channel.close();
           }
 
-          cacheManager.stop();
           cacheManager = null;
           topologyListener = null;
           channel = null;
@@ -242,5 +243,15 @@ public class JGroupsClusterManager implements ClusterManager, LambdaLogger {
       }
     }
     return is;
+  }
+
+  /**
+   * Mostly useful for testing: closes the JChannel if it's still open, unless it was provided
+   * to the constructor.
+   */
+  public void kill() {
+    if (channel!=null && !customChannel && channel.isOpen()) {
+      channel.close();
+    }
   }
 }
