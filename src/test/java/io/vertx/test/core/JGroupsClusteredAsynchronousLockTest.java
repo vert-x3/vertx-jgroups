@@ -16,10 +16,10 @@
 
 package io.vertx.test.core;
 
-import org.junit.Rule;
-
 import io.vertx.core.spi.cluster.ClusterManager;
 import io.vertx.spi.cluster.jgroups.JGroupsClusterManager;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class JGroupsClusteredAsynchronousLockTest extends ClusteredAsynchronousLockTest {
 
@@ -29,5 +29,17 @@ public class JGroupsClusteredAsynchronousLockTest extends ClusteredAsynchronousL
   @Override
   protected ClusterManager getClusterManager() {
     return new JGroupsClusterManager();
+  }
+
+  @Override
+  @Test
+  public void testLockReleasedForClosedNode() throws Exception {
+    super.testLockReleasedForClosedNode();
+  }
+
+  @Override
+  @Test
+  public void testLockReleasedForKilledNode() throws Exception {
+    super.testLockReleasedForKilledNode();
   }
 }
