@@ -17,6 +17,7 @@
 package io.vertx.spi.cluster.jgroups.impl.domain.async;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -24,10 +25,9 @@ import io.vertx.core.shareddata.AsyncMap;
 import io.vertx.spi.cluster.jgroups.impl.services.RpcExecutorService;
 import io.vertx.spi.cluster.jgroups.impl.support.LambdaLogger;
 
-import static io.vertx.spi.cluster.jgroups.impl.services.RpcServerObjDelegate.*;
-
-
 import java.util.Map;
+
+import static io.vertx.spi.cluster.jgroups.impl.services.RpcServerObjDelegate.*;
 
 public class AsyncMapWrapper<K, V> implements AsyncMap<K, V>, LambdaLogger {
 
@@ -57,8 +57,7 @@ public class AsyncMapWrapper<K, V> implements AsyncMap<K, V>, LambdaLogger {
 
   @Override
   public void put(K k, V v, long timeout, Handler<AsyncResult<Void>> handler) {
-    logTrace(() -> "put k = [" + k + "], v = [" + v + "], timeout = [" + timeout + "] handler = [" + handler + "]");
-    executorService.remoteExecute(CALL_MAP_PUT.method(name, k, v), timeout, handler);
+    handler.handle(Future.failedFuture(new UnsupportedOperationException()));
   }
 
   @Override
@@ -69,8 +68,7 @@ public class AsyncMapWrapper<K, V> implements AsyncMap<K, V>, LambdaLogger {
 
   @Override
   public void putIfAbsent(K k, V v, long timeout, Handler<AsyncResult<V>> handler) {
-    logTrace(() -> "putIfAbsent k = [" + k + "], v = [" + v + "], timeout = [" + timeout + "] handler = [" + handler + "]");
-    executorService.remoteExecute(CALL_MAP_PUTIFABSENT.method(name, k, v), timeout, handler);
+    handler.handle(Future.failedFuture(new UnsupportedOperationException()));
   }
 
   @Override

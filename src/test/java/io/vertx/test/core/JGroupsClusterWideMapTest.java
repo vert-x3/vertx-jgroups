@@ -16,10 +16,12 @@
 
 package io.vertx.test.core;
 
-import org.junit.Rule;
-
 import io.vertx.core.spi.cluster.ClusterManager;
 import io.vertx.spi.cluster.jgroups.JGroupsClusterManager;
+import org.junit.Rule;
+import org.junit.Test;
+
+import static org.hamcrest.CoreMatchers.*;
 
 public class JGroupsClusterWideMapTest extends ClusterWideMapTestDifferentNodes {
 
@@ -29,5 +31,29 @@ public class JGroupsClusterWideMapTest extends ClusterWideMapTestDifferentNodes 
   @Override
   protected ClusterManager getClusterManager() {
     return new JGroupsClusterManager();
+  }
+
+  @Override
+  @Test
+  public void testMapPutTtl() {
+    getVertx().sharedData().getClusterWideMap("unsupported", onSuccess(map -> {
+      map.put("k", "v", 13, onFailure(cause -> {
+        assertThat(cause, instanceOf(UnsupportedOperationException.class));
+        testComplete();
+      }));
+    }));
+    await();
+  }
+
+  @Override
+  @Test
+  public void testMapPutIfAbsentTtl() {
+    getVertx().sharedData().getClusterWideMap("unsupported", onSuccess(map -> {
+      map.putIfAbsent("k", "v", 13, onFailure(cause -> {
+        assertThat(cause, instanceOf(UnsupportedOperationException.class));
+        testComplete();
+      }));
+    }));
+    await();
   }
 }
