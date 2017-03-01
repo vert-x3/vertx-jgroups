@@ -22,6 +22,7 @@ import io.vertx.spi.cluster.jgroups.impl.support.DataHolder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.function.Predicate;
 
 public interface RpcMultiMapService {
 
@@ -32,6 +33,8 @@ public interface RpcMultiMapService {
   <K, V> boolean multiMapRemove(String name, DataHolder<K> k, DataHolder<V> v);
 
   <K, V> void multiMapRemoveAll(String name, DataHolder<V> v);
+
+  <K, V> void multiMapRemoveAllMatching(String name, DataHolder<Predicate<V>> p);
 
   void writeTo(OutputStream output) throws IOException;
 

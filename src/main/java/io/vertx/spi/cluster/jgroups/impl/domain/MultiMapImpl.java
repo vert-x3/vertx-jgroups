@@ -23,9 +23,11 @@ import io.vertx.spi.cluster.jgroups.impl.support.LambdaLogger;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 public class MultiMapImpl<K, V> implements MultiMap<K,V>, LambdaLogger {
 
@@ -73,6 +75,20 @@ public class MultiMapImpl<K, V> implements MultiMap<K,V>, LambdaLogger {
   public void removeAll(V v) {
     logTrace(() -> String.format("MultiMapImpl.removeAll name = [%s] and  v = [%s]", name, v));
     cache.replaceAll((k, oldValue) -> oldValue.remove(v));
+  }
+
+  @Override
+  public void removeAllMatching(Predicate<V> p) {
+    logTrace(() -> String.format("MultiMapImpl.removeAllMatching name = [%s]", name));
+    cache.replaceAll((k, oldValue) -> {
+      for (Iterator<V> iterator = oldValue.iterator(); iterator.hasNext(); ) {
+        V v = iterator.next();
+        if (p.test(v)) {
+          iterator.remove();
+        }
+      }
+      return oldValue;
+    });
   }
 
   @Override

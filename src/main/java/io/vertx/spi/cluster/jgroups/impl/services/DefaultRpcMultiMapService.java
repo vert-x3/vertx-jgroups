@@ -23,10 +23,15 @@ import io.vertx.spi.cluster.jgroups.impl.domain.MultiMapImpl;
 import io.vertx.spi.cluster.jgroups.impl.support.DataHolder;
 import io.vertx.spi.cluster.jgroups.impl.support.LambdaLogger;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class DefaultRpcMultiMapService implements RpcMultiMapService, LambdaLogger {
 
@@ -56,6 +61,15 @@ public class DefaultRpcMultiMapService implements RpcMultiMapService, LambdaLogg
     logDebug(() -> String.format("method multiMapRemoveAll name[%s] value[%s]", name, v));
     this.<K, V, Void>executeAndReturn(name, (map) -> {
       map.removeAll(v.unwrap());
+      return null;
+    });
+  }
+
+  @Override
+  public <K, V> void multiMapRemoveAllMatching(String name, DataHolder<Predicate<V>> p) {
+    logDebug(() -> String.format("method multiMapRemoveAllMatching name[%s]", name));
+    this.<K, V, Void>executeAndReturn(name, (map) -> {
+      map.removeAllMatching(p.unwrap());
       return null;
     });
   }
