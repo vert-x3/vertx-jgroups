@@ -24,8 +24,10 @@ import io.vertx.core.spi.cluster.AsyncMultiMap;
 import io.vertx.core.spi.cluster.ChoosableIterable;
 import io.vertx.spi.cluster.jgroups.impl.domain.MultiMap;
 import io.vertx.spi.cluster.jgroups.impl.services.RpcExecutorService;
-import io.vertx.spi.cluster.jgroups.impl.support.LambdaLogger;
 import io.vertx.spi.cluster.jgroups.impl.services.RpcServerObjDelegate;
+import io.vertx.spi.cluster.jgroups.impl.support.LambdaLogger;
+
+import java.util.function.Predicate;
 
 public class AsyncMultiMapWrapper<K, V> implements AsyncMultiMap<K, V>, LambdaLogger {
 
@@ -61,6 +63,11 @@ public class AsyncMultiMapWrapper<K, V> implements AsyncMultiMap<K, V>, LambdaLo
   @Override
   public void removeAllForValue(V v, Handler<AsyncResult<Void>> handler) {
     executorService.remoteExecute(RpcServerObjDelegate.CALL_MULTIMAP_REMOVE_ALL.method(name, v), handler);
+  }
+
+  @Override
+  public void removeAllMatching(Predicate<V> p, Handler<AsyncResult<Void>> handler) {
+    executorService.remoteExecute(RpcServerObjDelegate.CALL_MULTIMAP_REMOVE_ALL_MATCHING.method(name, p), handler);
   }
 
   @Override

@@ -30,6 +30,7 @@ import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public class RpcServerObjDelegate implements RpcMapService, RpcMultiMapService, LambdaLogger {
 
@@ -41,6 +42,7 @@ public class RpcServerObjDelegate implements RpcMapService, RpcMultiMapService, 
   private static final short MULTIMAP_ADD = 11;
   private static final short MULTIMAP_REMOVE = 12;
   private static final short MULTIMAP_REMOVE_ALL = 13;
+  private static final short MULTIMAP_REMOVE_ALL_MATCHING = 14;
 
   private static final short MAP_PUT = 21;
   private static final short MAP_PUTIFABSENT = 22;
@@ -54,6 +56,7 @@ public class RpcServerObjDelegate implements RpcMapService, RpcMultiMapService, 
   public static final MethodCallInterface.ThreeParameters CALL_MULTIMAP_ADD = (name, p1, p2) -> new MethodCall(MULTIMAP_ADD, name, DataHolder.wrap(p1), DataHolder.wrap(p2));
   public static final MethodCallInterface.ThreeParameters CALL_MULTIMAP_REMOVE = (name, p1, p2) -> new MethodCall(MULTIMAP_REMOVE, name, DataHolder.wrap(p1), DataHolder.wrap(p2));
   public static final MethodCallInterface.TwoParameters CALL_MULTIMAP_REMOVE_ALL = (name, p1) -> new MethodCall(MULTIMAP_REMOVE_ALL, name, DataHolder.wrap(p1));
+  public static final MethodCallInterface.TwoParameters CALL_MULTIMAP_REMOVE_ALL_MATCHING = (name, p1) -> new MethodCall(MULTIMAP_REMOVE_ALL_MATCHING, name, DataHolder.wrap(p1));
 
   public static final MethodCallInterface.ThreeParameters CALL_MAP_PUT = (name, p1, p2) -> new MethodCall(MAP_PUT, name, DataHolder.wrap(p1), DataHolder.wrap(p2));
   public static final MethodCallInterface.TwoParameters CALL_MAP_PUTALL = (name, p1) -> new MethodCall(MAP_PUTIFABSENT, name, DataHolder.wrap(p1));
@@ -116,6 +119,12 @@ public class RpcServerObjDelegate implements RpcMapService, RpcMultiMapService, 
   public <K, V> void multiMapRemoveAll(String name, DataHolder<V> v) {
     logTrace(() -> "RpcServerObjDelegate.multiMapRemoveAll name = [" + name + "], v = [" + v + "]");
     multiMapService.multiMapRemoveAll(name, v);
+  }
+
+  @Override
+  public <K, V> void multiMapRemoveAllMatching(String name, DataHolder<Predicate<V>> p) {
+    logTrace(() -> "RpcServerObjDelegate.multiMapRemoveAllMatching name = [" + name + "]");
+    multiMapService.multiMapRemoveAll(name, p);
   }
 
   @Override
