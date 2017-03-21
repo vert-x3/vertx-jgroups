@@ -19,7 +19,6 @@ package io.vertx.test.core;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.spi.cluster.jgroups.JGroupsClusterManager;
-
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -56,7 +55,7 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
       vertx1.set(res.result());
     });
 
-    waitUntil(() -> vertx1.get() != null);
+    assertWaitUntil(() -> vertx1.get() != null);
 
     Vertx.clusteredVertx(options2, res -> {
       assertTrue(res.succeeded());
@@ -102,7 +101,7 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
       vertx1.set(res.result());
     });
 
-    waitUntil(() -> vertx1.get() != null);
+    assertWaitUntil(() -> vertx1.get() != null);
 
     Vertx.clusteredVertx(options2, res -> {
       assertTrue(res.succeeded());
@@ -115,7 +114,7 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
       vertx2.set(res.result());
     });
 
-    waitUntil(() -> vertx2.get() != null);
+    assertWaitUntil(() -> vertx2.get() != null);
 
     Vertx.clusteredVertx(options3, res -> {
       assertTrue(res.succeeded());
@@ -128,7 +127,7 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
       vertx3.set(res.result());
     });
 
-    waitUntil(() -> vertx3.get() != null);
+    assertWaitUntil(() -> vertx3.get() != null);
 
     // Producer
     Vertx.clusteredVertx(options4, res -> {
@@ -138,7 +137,7 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
       res.result().eventBus().publish("news", "hello");
     });
 
-    waitUntil(() -> counter.get() == 3);
+    assertWaitUntil(() -> counter.get() == 3);
     vertx1.get().close();
     vertx2.get().close();
     vertx3.get().close();
@@ -171,7 +170,7 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
       vertx1.set(res.result());
     });
 
-    waitUntil(() -> vertx1.get() != null);
+    assertWaitUntil(() -> vertx1.get() != null);
 
     Vertx.clusteredVertx(options2, res -> {
       assertTrue(res.succeeded());
@@ -213,7 +212,7 @@ public class JGroupsSimpleClusterManagerTest extends AsyncTestBase {
       });
     });
 
-    waitUntil(() -> vertx1.get() != null);
+    assertWaitUntil(() -> vertx1.get() != null);
 
     Vertx.clusteredVertx(options2, res -> {
       assertTrue(res.succeeded());

@@ -19,7 +19,6 @@ package io.vertx.test.core;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.spi.cluster.jgroups.JGroupsClusterManager;
-
 import org.jgroups.JChannel;
 import org.junit.After;
 import org.junit.Assert;
@@ -93,7 +92,7 @@ public class JGroupsSimpleClusterManagerWithCustomJChannelTest extends AsyncTest
       vertx1.set(res.result());
     });
 
-    waitUntil(() -> vertx1.get() != null);
+    assertWaitUntil(() -> vertx1.get() != null);
 
     Vertx.clusteredVertx(options2, res -> {
       assertTrue(res.succeeded());
@@ -131,7 +130,7 @@ public class JGroupsSimpleClusterManagerWithCustomJChannelTest extends AsyncTest
       vertx1.set(res.result());
     });
 
-    waitUntil(() -> vertx1.get() != null);
+    assertWaitUntil(() -> vertx1.get() != null);
 
     // Producer
     Vertx.clusteredVertx(options2, res -> {
@@ -141,7 +140,7 @@ public class JGroupsSimpleClusterManagerWithCustomJChannelTest extends AsyncTest
       res.result().eventBus().publish("news", "hello");
     });
 
-    waitUntil(() -> counter.get() == 1);
+    assertWaitUntil(() -> counter.get() == 1);
     vertx1.get().close();
     vertx2.get().close();
   }
@@ -168,7 +167,7 @@ public class JGroupsSimpleClusterManagerWithCustomJChannelTest extends AsyncTest
       vertx1.set(res.result());
     });
 
-    waitUntil(() -> vertx1.get() != null);
+    assertWaitUntil(() -> vertx1.get() != null);
 
     Vertx.clusteredVertx(options2, res -> {
       assertTrue(res.succeeded());
@@ -208,7 +207,7 @@ public class JGroupsSimpleClusterManagerWithCustomJChannelTest extends AsyncTest
       });
     });
 
-    waitUntil(() -> vertx1.get() != null);
+    assertWaitUntil(() -> vertx1.get() != null);
 
     Vertx.clusteredVertx(options2, res -> {
       assertTrue(res.succeeded());
