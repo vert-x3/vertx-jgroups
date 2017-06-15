@@ -25,7 +25,7 @@ descriptor:
 <dependency>
   <groupId>io.vertx</groupId>
   <artifactId>vertx-jgroups</artifactId>
-  <version>3.4.2-SNAPSHOT</version>
+  <version>3.4.2</version>
 </dependency>
 ----
 
@@ -33,12 +33,12 @@ descriptor:
 
 [source,groovy,subs="+attributes"]
 ----
-compile 'io.vertx:vertx-jgroups:3.4.2-SNAPSHOT'
+compile 'io.vertx:vertx-jgroups:3.4.2'
 ----
 
 
 If you are using Vert.x from the command line, the jar corresponding to this cluster manager (it will be named
-`vertx-jgroups-3.4.2-SNAPSHOT.jar` should be in the `lib` directory of the Vert.x installation. Don't forget to
+`vertx-jgroups-3.4.2.jar` should be in the `lib` directory of the Vert.x installation. Don't forget to
 also add the `jgroups` jar too (`org.jgroups:jgroups:jar`).
 
 If the jar is on your classpath as above then Vert.x will automatically detect this and use it as the cluster manager.
