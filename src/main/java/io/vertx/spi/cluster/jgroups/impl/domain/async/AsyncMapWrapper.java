@@ -17,6 +17,7 @@
 package io.vertx.spi.cluster.jgroups.impl.domain.async;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
@@ -25,7 +26,11 @@ import io.vertx.core.shareddata.AsyncMap;
 import io.vertx.spi.cluster.jgroups.impl.services.RpcExecutorService;
 import io.vertx.spi.cluster.jgroups.impl.support.LambdaLogger;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static io.vertx.spi.cluster.jgroups.impl.services.RpcServerObjDelegate.*;
 
@@ -105,6 +110,53 @@ public class AsyncMapWrapper<K, V> implements AsyncMap<K, V>, LambdaLogger {
   public void size(Handler<AsyncResult<Integer>> handler) {
     logTrace(() -> "size handler = [" + handler + "]");
     executorService.runAsync(map::size, handler);
+  }
+
+  @Override
+  public void keys(Handler<AsyncResult<Set<K>>> handler) {
+    executorService.runAsync(map::keySet, handler);
+  }
+
+  @Override
+  public void values(Handler<AsyncResult<List<V>>> handler) {
+    Future<Set<K>> keysFuture = Future.future();
+    keys(keysFuture);
+    keysFuture.compose(keys -> {
+      List<Future> futures = new ArrayList<>(keys.size());
+      for (K k : keys) {
+        Future valueFuture = Future.future();
+        get(k, valueFuture);
+        futures.add(valueFuture);
+      }
+      return CompositeFuture.all(futures).map(compositeFuture -> {
+        List<V> values = new ArrayList<>(compositeFuture.size());
+        for (int i = 0; i < compositeFuture.size(); i++) {
+          values.add(compositeFuture.resultAt(i));
+        }
+        return values;
+      });
+    }).setHandler(handler);
+  }
+
+  @Override
+  public void entries(Handler<AsyncResult<Map<K, V>>> handler) {
+    Future<Set<K>> keysFuture = Future.future();
+    keys(keysFuture);
+    keysFuture.map(ArrayList::new).compose(keys -> {
+      List<Future> futures = new ArrayList<>(keys.size());
+      for (K k : keys) {
+        Future valueFuture = Future.future();
+        get(k, valueFuture);
+        futures.add(valueFuture);
+      }
+      return CompositeFuture.all(futures).map(compositeFuture -> {
+        Map<K, V> map = new HashMap<>();
+        for (int i = 0; i < compositeFuture.size(); i++) {
+          map.put(keys.get(i), compositeFuture.resultAt(i));
+        }
+        return map;
+      });
+    }).setHandler(handler);
   }
 
   @Override
