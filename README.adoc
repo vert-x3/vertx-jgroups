@@ -1,10 +1,8 @@
 = Project status
 
-This project is  sunsetting, i.e it will be kept a few months in Vert.x stack and will be replaced by  https://github.com/vert-x3/vertx-infinispan
+This project is retired and is replaced by  https://github.com/vert-x3/vertx-infinispan
 
 = JGroups Cluster Manager
-
-image:https://vertx.ci.cloudbees.com/buildStatus/icon?job=vert.x3-jgroups["Build Status",link="https://vertx.ci.cloudbees.com/view/vert.x-3/job/vert.x3-jgroups/"]
 
 This is a cluster manager implementation for Vert.x that uses http://www.jgroups.org[JGroups].
 
